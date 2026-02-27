@@ -33,6 +33,11 @@ const nextConfig: NextConfig = {
         hostname: "www.svgrepo.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "images.alphacoders.com",
+        pathname: "/**",
+      },
     ],
   },
 };
