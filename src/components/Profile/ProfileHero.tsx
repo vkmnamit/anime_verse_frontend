@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface ProfileHeroProps {
     user: {
@@ -10,77 +11,89 @@ interface ProfileHeroProps {
         tags: string[];
         isVip?: boolean;
     };
+    isOwnProfile?: boolean;
+    onProfileUpdated?: () => void;
 }
 
-export default function ProfileHero({ user }: ProfileHeroProps) {
+export default function ProfileHero({ user, isOwnProfile }: ProfileHeroProps) {
+    const router = useRouter();
+
     return (
-        <div className="relative w-full rounded-3xl overflow-hidden mb-8 group">
-            {/* Banner Background */}
-            <div className="relative h-64 md:h-80 w-full">
+        <div className="relative w-full rounded-none overflow-hidden mb-6 group border border-white/[0.04]">
+            {/* Banner Background — Cosmic Galaxy */}
+            <div className="relative h-64 md:h-80 w-full overflow-hidden">
                 <Image
-                    src="https://images.unsplash.com/photo-1462331940025-496dfbfc7564?w=1200&h=400&fit=crop"
+                    src="https://images.unsplash.com/photo-1462331940025-496df975641f?w=1600&h=600&fit=crop&q=100"
                     alt="Cover"
                     fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="object-cover transition-transform duration-1000 group-hover:scale-105"
+                    priority
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0f] via-[#0b0b0f]/20 to-transparent" />
+
+                {/* Multi-layered premium overlays */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b10] via-[#0b0b10]/40 to-transparent" />
+                <div className="absolute inset-0 bg-[#e63030]/10 mix-blend-overlay" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0b0b10]/80 via-[#0b0b10]/30 to-transparent" />
             </div>
 
             {/* Profile Info Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 flex flex-col md:flex-row md:items-end gap-6">
-                {/* Avatar */}
-                <div className="relative shrink-0">
-                    <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl overflow-hidden border-4 border-[#0b0b0f] shadow-2xl relative z-10">
-                        <Image
-                            src={user.avatar}
-                            alt={user.username}
-                            fill
-                            className="object-cover"
-                        />
+            <div className="absolute inset-0 flex flex-col justify-end p-8 md:p-10">
+                <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-8">
+                    {/* Avatar with Status */}
+                    <div className="relative shrink-0 group/avatar">
+                        <div className="w-28 h-28 md:w-36 md:h-36 rounded-none overflow-hidden border-[6px] border-[#0b0b10] shadow-[0_0_40px_rgba(0,0,0,0.5)] relative z-10 transition-transform group-hover/avatar:scale-105 duration-500">
+                            <Image
+                                src={user.avatar}
+                                alt={user.username}
+                                fill
+                                className="object-cover"
+                            />
+                        </div>
+                        {/* Status/Indicator - Rectangular */}
+                        <div className="absolute bottom-2 right-2 w-7 h-7 bg-[#e63030] rounded-none border-4 border-[#0b0b10] z-20 flex items-center justify-center shadow-lg">
+                            <span className="text-white text-[10px] transform rotate-45 font-black">✕</span>
+                        </div>
                     </div>
-                    {/* Badge */}
-                    <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-black/80 backdrop-blur-md rounded-xl border border-white/20 flex items-center justify-center z-20">
-                        <span className="text-red-500 text-xs">🔴</span>
-                    </div>
-                </div>
 
-                {/* Text Info */}
-                <div className="flex-1 flex flex-col gap-3">
-                    <div className="flex items-center gap-3">
-                        <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight">
-                            {user.username}
-                        </h1>
-                        {user.isVip && (
-                            <span className="w-6 h-6 bg-yellow-400 rounded-lg flex items-center justify-center text-[10px] transform rotate-12">
-                                ⭐
-                            </span>
+                    {/* Text Info */}
+                    <div className="flex-1 flex flex-col gap-2">
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight drop-shadow-md">
+                                {user.username}
+                            </h1>
+                            <span className="text-yellow-400 text-xl drop-shadow-sm">⭐</span>
+                        </div>
+                        <p className="text-white/50 text-base font-medium">@{user.username}</p>
+                        <p className="text-[#c0c0d8] text-base md:text-lg max-w-2xl leading-relaxed mt-1 font-medium drop-shadow-sm italic">
+                            {user.bio}
+                        </p>
+                        <div className="flex flex-wrap gap-2.5 mt-2">
+                            {user.tags.map((tag, i) => (
+                                <span
+                                    key={tag}
+                                    className="px-4 py-1.5 rounded-none text-[10px] font-black uppercase tracking-widest transition-all bg-white/[0.05] border border-white/10 text-[#b3b3c2] hover:bg-white/[0.08] hover:text-white cursor-default"
+                                >
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Edit Profile Button */}
+                    <div className="self-start md:self-end">
+                        {isOwnProfile ? (
+                            <button
+                                onClick={() => router.push("/settings/profile")}
+                                className="px-8 py-3 bg-[#e63030] hover:bg-[#ff3b3b] text-white text-[11px] font-black uppercase tracking-[0.2em] rounded-none transition-all active:scale-95 shadow-[0_8px_25px_-5px_rgba(230,48,48,0.5)] hover:shadow-[0_12px_30px_-5px_rgba(230,48,48,0.6)]"
+                            >
+                                Edit Profile
+                            </button>
+                        ) : (
+                            <button className="px-8 py-3 bg-white hover:bg-white/90 text-black text-[11px] font-black uppercase tracking-[0.2em] rounded-none transition-all active:scale-95">
+                                Follow
+                            </button>
                         )}
                     </div>
-                    <p className="text-[#8a8a9a] text-sm md:text-base max-w-xl leading-relaxed">
-                        {user.bio}
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                        {user.tags.map((tag) => (
-                            <span
-                                key={tag}
-                                className="px-3 py-1 bg-white/[0.05] border border-white/10 rounded-lg text-[10px] font-bold text-[#b3b3c2] hover:bg-white/[0.1] transition-colors cursor-default"
-                            >
-                                {tag}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-3 self-start md:self-end">
-                    <button className="px-6 py-2.5 bg-[#e63030] hover:bg-[#ff3b3b] text-white text-sm font-bold rounded-xl transition-all active:scale-95 shadow-lg shadow-red-900/20">
-                        Edit Profile
-                    </button>
-                    <button className="p-2.5 bg-white/[0.05] border border-white/10 hover:bg-white/[0.1] text-white rounded-xl transition-all">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-                        </svg>
-                    </button>
                 </div>
             </div>
         </div>

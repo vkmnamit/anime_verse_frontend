@@ -1,14 +1,26 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { getTrendingAnime, type AnimeCard as AnimeCardType } from "@/src/lib/kitsu";
 import { useAnimeModal } from "@/src/context/AnimeModalContext";
+import { useSearch } from "@/src/context/SearchContext";
 import { api } from "@/src/lib/api";
 
 export default function TrendingList() {
     const [trending, setTrending] = useState<AnimeCardType[]>([]);
     const [loading, setLoading] = useState(true);
     const { openModal } = useAnimeModal();
+    const { searchQuery } = useSearch();
+
+    const filteredTrending = useMemo(() => {
+        if (!searchQuery.trim()) return trending;
+        const q = searchQuery.toLowerCase();
+        return trending.filter(anime =>
+            anime.title.toLowerCase().includes(q) ||
+            anime.synopsis?.toLowerCase().includes(q) ||
+            anime.categories?.some(c => c.toLowerCase().includes(q))
+        );
+    }, [trending, searchQuery]);
 
     useEffect(() => {
         const fetchTrending = async () => {
@@ -49,28 +61,28 @@ export default function TrendingList() {
 
     return (
         <div className="flex-1 flex flex-col gap-8 pb-20">
-            <header className="flex items-end justify-between pt-20 px-4 md:px-12 lg:px-24">
+            <header className="flex items-end justify-between pt-10 sm:pt-16 lg:pt-20 px-2 sm:px-4 md:px-8 lg:px-16">
                 <div>
-                    <h1 className="text-5xl font-black text-white tracking-tighter mb-2 italic">Trending Now</h1>
-                    <p className="text-white/40 text-lg font-bold uppercase tracking-[0.2em]">Verified Community Heat</p>
+                    <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-[0.2em] mb-1 sm:mb-2  uppercase">Trending Now</h1>
+                    {/* <p className="text-white/40 text-sm sm:text-base lg:text-lg font-bold uppercase tracking-[0.4em]">Verified Community Heat</p> */}
                 </div>
             </header>
 
             {/* List */}
-            <div className="flex flex-col px-4 md:px-12 lg:px-24">
-                {trending.map((anime, index) => (
+            <div className="flex flex-col px-2 sm:px-4 md:px-8 lg:px-16">
+                {filteredTrending.map((anime, index) => (
                     <div
                         key={anime.id}
                         onClick={() => openModal(anime)}
-                        className="group relative flex items-center gap-8 py-10 border-b border-white/[0.03] hover:bg-white/[0.01] transition-all cursor-pointer first:pt-0"
+                        className="group relative flex items-center gap-3 sm:gap-5 lg:gap-8 py-5 sm:py-7 lg:py-10 border-b border-white/[0.03] hover:bg-white/[0.01] transition-all cursor-pointer first:pt-0"
                     >
-                        {/* Rank Number - Bold & High Visibility */}
-                        <div className="text-7xl font-black italic text-[#e63030]/40 w-24 text-center select-none group-hover:text-[#e63030] transition-colors leading-none">
+                        {/* Rank Number */}
+                        <div className="text-3xl sm:text-5xl lg:text-7xl font-black italic text-[#e63030]/40 w-10 sm:w-16 lg:w-24 text-center select-none group-hover:text-[#e63030] transition-colors leading-none shrink-0">
                             {index + 1}
                         </div>
 
-                        {/* Image Box - Pure Rectangle */}
-                        <div className="relative w-40 lg:w-48 aspect-[2/3] bg-[#111118]/40 backdrop-blur-2xl border border-white/10 rounded-sm overflow-hidden shadow-2xl shrink-0">
+                        {/* Image Box */}
+                        <div className="relative w-20 sm:w-32 lg:w-40 xl:w-48 aspect-[2/3] bg-[#111118]/40 backdrop-blur-2xl border border-white/10 rounded-sm overflow-hidden shadow-2xl shrink-0">
                             <img
                                 src={anime.coverImage || anime.posterImage}
                                 alt={anime.title}
@@ -79,38 +91,32 @@ export default function TrendingList() {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-40 group-hover:opacity-60 transition-opacity" />
                         </div>
 
-                        {/* Content Area */}
-                        <div className="flex-1 min-w-0 flex flex-col gap-3">
-                            <div className="flex items-center gap-4">
+                        <div className="flex-1 min-w-0 flex flex-col gap-1.5 sm:gap-2 lg:gap-3">
+                            <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
                                 <h2
-                                    className="text-2xl lg:text-3xl font-black text-white group-hover:text-[#e63030] transition-colors truncate tracking-tighter uppercase"
+                                    className="text-base sm:text-xl lg:text-2xl xl:text-3xl font-black text-white group-hover:text-[#e63030] transition-colors line-clamp-2 sm:truncate tracking-tighter uppercase"
                                     style={{ fontFamily: 'var(--font-rubik), Rubik, sans-serif' }}
                                 >
                                     {anime.title}
                                 </h2>
                                 {anime.rating && (
                                     <div className="flex items-center gap-1.5 px-3 py-1 bg-white/10 rounded-none border border-white/20 shrink-0">
-                                        <span className="text-white font-black text-[11px] uppercase tracking-widest">★ {(anime.rating / 10).toFixed(1)}</span>
+                                        <span className="text-white font-black text-[11px] uppercase tracking-[0.3em]">★ {(anime.rating / 10).toFixed(1)}</span>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Synopsis - Increased visibility */}
-                            <p className="text-white/60 text-[14px] font-medium line-clamp-2 leading-relaxed max-w-[800px] tracking-wide">
-                                {anime.synopsis}
-                            </p>
-
-                            {/* Tags Row - Sharp Borders */}
-                            <div className="flex items-center flex-wrap gap-3 mt-1">
-                                <span className="px-3 py-1.5 rounded-none bg-white/10 text-white/90 text-[10px] font-black uppercase tracking-[0.2em] border border-white/10">
+                            {/* Tags Row */}
+                            <div className="flex items-center flex-wrap gap-2 sm:gap-3 mt-1">
+                                <span className="px-3 py-1.5 rounded-none bg-white/10 text-white/90 text-[10px] font-black uppercase tracking-[0.3em] border border-white/10">
                                     {anime.categories?.[0] || "Anime"}
                                 </span>
                                 {anime.status === "current" && (
-                                    <span className="px-3 py-1.5 rounded-none bg-[#e63030]/20 text-[#e63030] text-[10px] font-black uppercase tracking-[0.2em] border border-[#e63030]/30">
+                                    <span className="px-3 py-1.5 rounded-none bg-[#e63030]/20 text-[#e63030] text-[10px] font-black uppercase tracking-[0.3em] border border-[#e63030]/30">
                                         Active Trend
                                     </span>
                                 )}
-                                <span className="px-3 py-1.5 rounded-none bg-white/5 text-white/40 text-[10px] font-black uppercase tracking-[0.2em] border border-white/5">
+                                <span className="px-3 py-1.5 rounded-none bg-white/5 text-white/40 text-[10px] font-black uppercase tracking-[0.3em] border border-white/5">
                                     HD 4K
                                 </span>
                             </div>

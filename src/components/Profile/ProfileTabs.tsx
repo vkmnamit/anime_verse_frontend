@@ -1,36 +1,52 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const tabs = [
-    { id: "profile", label: "Profile" },
-    { id: "watchlist", label: "Watchlist" },
-    { id: "activities", label: "Activities" },
-    { id: "battles", label: "Battles" },
-    { id: "following", label: "Following" },
-    { id: "followers", label: "Followers" },
+    { id: "profile", label: "Profile", href: "" },
+    { id: "watchlist", label: "Watchlist", href: "/watchlist" },
+    { id: "activities", label: "Activities", href: "/activities" },
+    { id: "battles", label: "Battles", href: "/battles" },
+    { id: "following", label: "Following", href: "/following" },
+    { id: "followers", label: "Followers", href: "/followers" },
 ];
 
-export default function ProfileTabs() {
-    const [activeTab, setActiveTab] = useState("profile");
+export default function ProfileTabs({ username }: { username: string }) {
+    const pathname = usePathname();
+
+    const getActiveTab = () => {
+        if (pathname.endsWith(`/profile/${username}`)) return "profile";
+        const parts = pathname.split("/");
+        return parts[parts.length - 1];
+    };
+
+    const activeTab = getActiveTab();
 
     return (
-        <div className="flex items-center gap-1 overflow-x-auto pb-4 mb-8 border-b border-white/[0.06] scrollbar-hide">
-            {tabs.map((tab) => (
-                <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all relative shrink-0 ${activeTab === tab.id
-                            ? "text-white bg-white/[0.05]"
-                            : "text-[#6b6b78] hover:text-white hover:bg-white/[0.02]"
-                        }`}
-                >
-                    {tab.label}
-                    {activeTab === tab.id && (
-                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-[#e63030] rounded-full" />
-                    )}
-                </button>
-            ))}
+        <div className="flex items-center gap-12 overflow-x-auto pt-10 pb-0 mb-16 border-b border-white/[0.04] scrollbar-hide">
+            {tabs.map((tab) => {
+                const href = `/profile/${username}${tab.href}`;
+                const isActive = activeTab === tab.id;
+
+                return (
+                    <Link
+                        key={tab.id}
+                        href={href}
+                        className={`relative pb-5 text-[15px] font-semibold transition-all shrink-0 ${isActive
+                            ? "text-white"
+                            : "text-white/30 hover:text-white/60"
+                            }`}
+                    >
+                        {tab.label}
+                        {isActive && (
+                            <div className="absolute bottom-0 left-0 right-0 flex justify-center">
+                                <div className="w-10 h-[3.5px] bg-[#e63030] rounded-t-full shadow-[0_0_15px_rgba(230,48,48,0.4)]" />
+                            </div>
+                        )}
+                    </Link>
+                );
+            })}
         </div>
     );
 }

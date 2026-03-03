@@ -1,5 +1,4 @@
-import type { Metadata } from "next";
-import { Inter, Rubik } from "next/font/google";
+import { Inter, Rubik, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -14,6 +13,14 @@ const rubik = Rubik({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+const ibmPlex = IBM_Plex_Sans({
+  variable: "--font-ibm-plex",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+import type { Metadata } from "next";
+
 export const metadata: Metadata = {
   title: "AnimeVerse — Your Anime Social Universe",
   description:
@@ -22,6 +29,7 @@ export const metadata: Metadata = {
 
 import { AnimeModalProvider } from "@/src/context/AnimeModalContext";
 import { AuthProvider } from "@/src/context/AuthContext";
+import { SearchProvider } from "@/src/context/SearchContext";
 import AnimeDetailModal from "@/src/components/AnimeDetailModal/AnimeDetailModal";
 
 export default function RootLayout({
@@ -30,13 +38,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} ${rubik.variable} antialiased font-sans bg-[#0b0b0f]`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.variable} ${rubik.variable} ${ibmPlex.variable} antialiased font-sans bg-[#0b0b0f]`}>
         <AuthProvider>
-          <AnimeModalProvider>
-            {children}
-            <AnimeDetailModal />
-          </AnimeModalProvider>
+          <SearchProvider>
+            <AnimeModalProvider>
+              {children}
+              <AnimeDetailModal />
+            </AnimeModalProvider>
+          </SearchProvider>
         </AuthProvider>
       </body>
     </html>

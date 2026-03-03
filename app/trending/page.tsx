@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Navbar from "@/src/components/Navbar/Navbar";
 import TrendingList from "@/src/components/Trending/TrendingList";
-import TrendingSidebar from "@/src/components/Trending/TrendingSidebar";
+import TrendingPageSidebar from "@/src/components/Trending/TrendingPageSidebar";
 
 export default function TrendingPage() {
     return (
@@ -26,22 +26,15 @@ export default function TrendingPage() {
             <div className="relative z-10 w-full">
                 <Navbar />
 
-                {/* Header Area */}
-                <header className="flex items-end justify-between pt-24">
-                    {/* This header is intentionally left empty for now, but provides a consistent top padding */}
-                </header>
 
-                {/* Spacer to push content down */}
-                <div className="h-24" />
-
-                <main className="pb-40 px-6 lg:px-12 max-w-[1500px] mx-auto flex flex-col lg:flex-row gap-20">
+                <main className="pb-20 px-4 sm:px-6 lg:px-10 max-w-[1500px] mx-auto flex flex-col lg:flex-row gap-8 lg:gap-14">
                     {/* Main Content Area: Trending List */}
                     <div className="flex-1 min-w-0">
                         <TrendingList />
                     </div>
 
-                    {/* Right Sidebar: Rankings & Gained Heat */}
-                    <TrendingSidebar />
+                    {/* Right Sidebar: specialized for Trending page */}
+                    <TrendingPageSidebar />
                 </main>
             </div>
         </div>

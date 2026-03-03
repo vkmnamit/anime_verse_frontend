@@ -10,6 +10,7 @@ interface User {
     username: string;
     avatar_url?: string;
     bio?: string;
+    genres?: string[];
 }
 
 interface AuthContextType {
@@ -19,6 +20,8 @@ interface AuthContextType {
     login: (data: any) => Promise<void>;
     signup: (data: any) => Promise<void>;
     logout: () => Promise<void>;
+    setUser: React.Dispatch<React.SetStateAction<User | null>>;
+    refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -88,8 +91,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         router.push("/auth");
     };
 
+    const refreshUser = async () => {
+        if (!token) return;
+        try {
+            const userData = await api.auth.me(token);
+            setUser(userData.data || userData);
+        } catch (err) {
+            console.error("Failed to refresh user", err);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, signup, logout }}>
+        <AuthContext.Provider value={{ user, token, loading, login, signup, logout, setUser, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );

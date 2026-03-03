@@ -2,126 +2,135 @@
 
 import Image from "next/image";
 
+// ─── About Section ───────────────────────────────────────────────────────────
 export function AboutWidget({ text }: { text: string }) {
     return (
-        <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-6">
-            <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-                About Me
-            </h3>
-            <p className="text-[#8a8a9a] text-sm leading-relaxed">
-                {text}
-            </p>
-        </div>
-    );
-}
+        <div className="flex flex-col gap-5 mt-4 group">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-white/40 text-center group-hover:text-white/60 transition-colors">About Me</h3>
+            <div className="bg-white/[0.02] border border-white/[0.05] p-7 rounded-none relative overflow-hidden group-hover:bg-white/[0.04] transition-all duration-500">
+                {/* Accent line */}
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#e63030]/20 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-700" />
 
-export function BadgesWidget({ badges }: { badges: { name: string, icon: string }[] }) {
-    return (
-        <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-6">
-            <h3 className="text-white font-bold mb-4 flex items-center justify-between">
-                Badges
-                <span className="text-[#6b6b78] text-[10px] cursor-help">❓</span>
-            </h3>
-            <div className="flex flex-col gap-3">
-                {badges.map((badge) => (
-                    <div key={badge.name} className="flex items-center gap-3 p-2 bg-white/[0.02] border border-white/[0.04] rounded-xl hover:bg-white/[0.04] transition-colors cursor-pointer group">
-                        <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            {badge.icon}
-                        </div>
-                        <span className="text-xs font-bold text-[#b3b3c2] group-hover:text-white transition-colors">{badge.name}</span>
-                    </div>
-                ))}
+                <p className="text-[14px] leading-[1.8] text-white/50 font-medium text-center selection:bg-[#e63030]/30 selection:text-white">
+                    {text}
+                </p>
             </div>
         </div>
     );
 }
 
-export function GenresWidget({ genres }: { genres: { name: string, icon: string }[] }) {
+// ─── Badges Widget ────────────────────────────────────────────────────────────
+export function BadgesWidget({ badges }: { badges: any[] }) {
     return (
-        <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-6">
-            <h3 className="text-white font-bold mb-4">Favorite Genres</h3>
-            <div className="flex flex-col gap-1">
-                {genres.map((genre) => (
-                    <div key={genre.name} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.03] transition-colors cursor-pointer group">
-                        <span className="text-lg">{genre.icon}</span>
-                        <span className="text-sm font-bold text-[#8a8a9a] group-hover:text-white transition-colors">{genre.name}</span>
-                    </div>
-                ))}
+        <div className="flex flex-col gap-5 mt-6 group">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-white/40 text-center group-hover:text-white/60 transition-colors">Badges</h3>
+            <div className="bg-white/[0.02] border border-white/[0.05] p-8 rounded-none group-hover:bg-white/[0.04] transition-all duration-500">
+                <div className="grid grid-cols-3 gap-6">
+                    {badges.map((badge, i) => (
+                        <div key={i} className="flex flex-col items-center gap-3 group/item">
+                            <div className="w-14 h-14 bg-white/[0.04] border border-white/[0.06] flex items-center justify-center text-2xl rounded-none shadow-lg group-hover/item:border-[#e63030]/30 group-hover/item:bg-white/[0.08] transition-all duration-500">
+                                {badge.icon}
+                            </div>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-white/20 text-center leading-tight group-hover/item:text-white/50 transition-colors">
+                                {badge.name}
+                            </span>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
 }
 
-export function ReactionsWidget({ reactions }: { reactions: { anime: string, time: string, icon: string }[] }) {
+// ─── Genres Widget ────────────────────────────────────────────────────────────
+export function GenresWidget({ genres }: { genres: any[] }) {
     return (
-        <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-6">
-            <h3 className="text-white font-bold mb-4">Recently Reactions</h3>
-            <div className="flex flex-col gap-4">
-                {reactions.map((r, i) => (
-                    <div key={i} className="flex items-center gap-3 group cursor-pointer">
-                        <div className="w-10 h-10 rounded-lg bg-white/[0.03] flex items-center justify-center shrink-0 border border-white/[0.06] group-hover:border-white/[0.1] transition-all overflow-hidden">
-                            <Image src={`https://images.unsplash.com/photo-1541562232579-512a21360020?w=80&h=80&fit=crop&q=80`} alt={r.anime} width={40} height={40} className="object-cover group-hover:scale-110 transition-transform" />
+        <div className="flex flex-col gap-5 mt-6 group">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-white/40 text-center group-hover:text-white/60 transition-colors">Fav Genres</h3>
+            <div className="bg-white/[0.02] border border-white/[0.05] p-8 rounded-none group-hover:bg-white/[0.04] transition-all duration-500">
+                <div className="flex flex-wrap justify-center gap-3">
+                    {genres.map((genre, i) => (
+                        <div key={i} className="px-5 py-2.5 bg-white/[0.03] border border-white/[0.06] rounded-none flex items-center gap-2 hover:bg-[#e63030]/5 hover:border-[#e63030]/20 transition-all cursor-default">
+                            <span className="text-xs">{genre.icon}</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/40">{genre.name}</span>
                         </div>
-                        <div className="flex-1 overflow-hidden">
-                            <h4 className="text-xs font-bold text-white truncate group-hover:text-[#e63030] transition-colors">{r.anime}</h4>
-                            <p className="text-[10px] text-[#6b6b78]">{r.time} • {r.icon}</p>
-                        </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
         </div>
     );
 }
 
+// ─── Reactions Widget ──────────────────────────────────────────────────────────
+export function ReactionsWidget({ reactions }: { reactions: any[] }) {
+    return (
+        <div className="flex flex-col gap-5 mt-4 group">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-white/40 text-center group-hover:text-white/60 transition-colors">Recent Reactions</h3>
+            <div className="bg-white/[0.02] border border-white/[0.05] p-2 rounded-none group-hover:bg-white/[0.04] transition-all duration-500">
+                <div className="flex flex-col">
+                    {reactions.map((r, i) => (
+                        <div key={i} className="flex items-center gap-4 p-4 border-b border-white/[0.03] last:border-none group/row hover:bg-white/[0.02] transition-colors">
+                            <div className="w-12 h-16 bg-white/[0.05] border border-white/[0.08] rounded-none shrink-0 overflow-hidden flex items-center justify-center text-xl shadow-lg group-hover/row:scale-105 transition-transform duration-500">
+                                {r.icon || "🔥"}
+                            </div>
+                            <div className="flex-1 flex flex-col justify-center gap-0.5 min-w-0">
+                                <h4 className="text-[13px] font-black uppercase tracking-tight text-white/80 truncate group-hover/row:text-[#e63030] transition-colors">{r.anime}</h4>
+                                <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/20">{r.time}</p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ─── Watchlist Progress ────────────────────────────────────────────────────────
 export function ProgressWidget({ percentage }: { percentage: number }) {
     return (
-        <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-6">
-            <h3 className="text-white font-bold mb-4 flex items-center justify-between">
-                Watchlist Progress
-                <span className="text-[10px] text-[#6b6b78]">{percentage}%</span>
-            </h3>
-            <div className="h-1.5 w-full bg-white/[0.04] rounded-full overflow-hidden">
-                <div
-                    className="h-full bg-gradient-to-r from-[#e63030] to-[#ff6b2c] rounded-full shadow-[0_0_8px_rgba(230,48,48,0.4)]"
-                    style={{ width: `${percentage}%` }}
-                />
-            </div>
-            <div className="mt-4 flex items-center justify-between">
-                <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] text-[#6b6b78] uppercase font-bold tracking-wider">Completed</span>
-                    <span className="text-sm font-black text-white italic">13h 198</span>
-                </div>
-                <div className="w-px h-8 bg-white/[0.06]" />
-                <div className="flex flex-col gap-0.5 text-right">
-                    <span className="text-[10px] text-[#6b6b78] uppercase font-bold tracking-wider">Minutes</span>
-                    <span className="text-sm font-black text-white italic">187 235</span>
+        <div className="flex flex-col gap-5 mt-6 group">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-white/40 text-center group-hover:text-white/60 transition-colors">Watchlist Goal</h3>
+            <div className="bg-white/[0.02] border border-white/[0.05] p-9 rounded-none group-hover:bg-white/[0.04] transition-all duration-500">
+                <div className="flex flex-col items-center gap-6">
+                    <div className="relative w-28 h-28 flex items-center justify-center">
+                        <svg className="w-full h-full -rotate-90">
+                            <circle cx="56" cy="56" r="50" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="6" />
+                            <circle cx="56" cy="56" r="50" fill="none" stroke="#e63030" strokeWidth="6" strokeDasharray="314" strokeDashoffset={314 - (314 * percentage) / 100} strokeLinecap="square" className="transition-all duration-1000 ease-out" />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-2xl font-black italic text-white">{percentage}%</span>
+                            <span className="text-[8px] font-black text-white/20 uppercase tracking-widest mt-0.5">Progress</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     );
 }
 
-export function ScheduleWidget({ releases }: { releases: { title: string, episode: number, time: string }[] }) {
+// ─── Release Schedule ──────────────────────────────────────────────────────────
+export function ScheduleWidget({ releases }: { releases: any[] }) {
     return (
-        <div className="bg-[#111118] border border-white/[0.06] rounded-2xl p-6">
-            <h3 className="text-white font-bold mb-4">Later This Week</h3>
-            <div className="flex flex-col gap-4">
-                {releases.map((rel, i) => (
-                    <div key={i} className="flex gap-3 group cursor-pointer">
-                        <div className="w-10 h-14 rounded-lg bg-white/[0.03] border border-white/[0.06] flex items-center justify-center shrink-0 overflow-hidden">
-                            <Image src={`https://images.unsplash.com/photo-1542451313-a11b03b51d6d?w=80&h=120&fit=crop&q=80`} alt={rel.title} width={40} height={56} className="object-cover group-hover:scale-110 transition-transform" />
+        <div className="flex flex-col gap-5 mt-6 group">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-white/40 text-center group-hover:text-white/60 transition-colors">Transmissions</h3>
+            <div className="bg-white/[0.02] border border-white/[0.05] p-2 rounded-none group-hover:bg-white/[0.04] transition-all duration-500">
+                <div className="flex flex-col">
+                    {releases.map((rel, i) => (
+                        <div key={i} className="flex items-center gap-4 p-4 border-b border-white/[0.03] last:border-none hover:bg-white/[0.02] transition-colors group/row">
+                            <div className="w-14 h-14 bg-white/[0.05] border border-white/[0.08] rounded-none shrink-0 flex items-center justify-center text-xl shadow-lg">
+                                📡
+                            </div>
+                            <div className="flex-1 flex flex-col justify-center gap-0.5 min-w-0">
+                                <h4 className="text-[13px] font-black uppercase tracking-tight text-white/80 truncate group-hover/row:text-[#e63030] transition-colors">Ep {rel.episode}: {rel.title}</h4>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-1 h-1 rounded-full bg-[#10b981] animate-pulse" />
+                                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/30 truncate">Deploying in {rel.time}</p>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex-1">
-                            <h4 className="text-xs font-bold text-white group-hover:text-[#e63030] transition-colors leading-tight">{rel.title}</h4>
-                            <p className="text-[10px] text-[#6b6b78] mt-1">Episode {rel.episode}</p>
-                            <p className="text-[10px] text-[#e63030] font-bold mt-0.5">{rel.time}</p>
-                        </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
-            <button className="w-full mt-6 py-2.5 bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.06] rounded-xl text-[10px] font-bold text-[#b3b3c2] transition-all">
-                View All
-            </button>
         </div>
     );
 }

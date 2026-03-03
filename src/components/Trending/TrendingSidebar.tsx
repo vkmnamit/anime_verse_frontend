@@ -1,12 +1,27 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { getPopularAnime, getTrendingAnime, type AnimeCard as AnimeCardType } from "@/src/lib/kitsu";
+import { useSearch } from "@/src/context/SearchContext";
+import AnimeCard from "@/src/components/AnimeCard/AnimeCard";
 
 export default function TrendingSidebar() {
     const [popular, setPopular] = useState<AnimeCardType[]>([]);
     const [trending, setTrending] = useState<AnimeCardType[]>([]);
     const [loading, setLoading] = useState(true);
+    const { searchQuery } = useSearch();
+
+    const filteredPopular = useMemo(() => {
+        if (!searchQuery.trim()) return popular;
+        const q = searchQuery.toLowerCase();
+        return popular.filter(a => a.title.toLowerCase().includes(q));
+    }, [popular, searchQuery]);
+
+    const filteredTrending = useMemo(() => {
+        if (!searchQuery.trim()) return trending;
+        const q = searchQuery.toLowerCase();
+        return trending.filter(a => a.title.toLowerCase().includes(q));
+    }, [trending, searchQuery]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -28,75 +43,91 @@ export default function TrendingSidebar() {
 
     if (loading) {
         return (
-            <aside className="w-full lg:w-[380px] shrink-0 flex flex-col gap-10 sticky top-20 h-fit self-start z-10 animate-pulse">
+            <aside className="w-full lg:w-[340px] xl:w-[380px] shrink-0 flex flex-col gap-6 lg:gap-10 lg:sticky lg:top-20 lg:h-fit lg:self-start z-10 animate-pulse">
                 {[1, 2, 3].map(i => (
-                    <div key={i} className="bg-white/5 h-64 rounded-xl border border-white/10" />
+                    <div key={i} className="bg-white/5 h-48 lg:h-64 rounded-none border border-white/10" />
                 ))}
             </aside>
         );
     }
 
     return (
-        <aside className="w-full lg:w-[380px] shrink-0 flex flex-col gap-8 sticky top-20 h-[calc(100vh-100px)] self-start z-10 overflow-y-auto custom-sidebar-container pr-1">
-            {/* Box 1: Heat Ranking Widget (Restored Rounded Style) */}
-            <div className="bg-[#111118]/60 backdrop-blur-3xl border border-white/10 rounded-xl overflow-hidden shadow-2xl flex flex-col h-[400px]">
-                <div className="px-6 py-5 flex items-center justify-between border-b border-white/5">
+        <aside className="w-full lg:w-[340px] xl:w-[380px] shrink-0 flex flex-col gap-6 lg:gap-8 lg:sticky lg:top-20 lg:h-[calc(100vh-100px)] lg:self-start z-10 lg:overflow-y-auto custom-sidebar-container pr-0 lg:pr-1">
+            {/* Box 1: Heat Ranking Widget */}
+            <div className="bg-white/[0.05] backdrop-blur-xl border border-white/5 rounded-none overflow-hidden shadow-2xl flex flex-col min-h-[400px]">
+                <div className="px-6 py-5 flex items-center justify-center border-b border-white/5 bg-white/[0.03]">
                     <div className="flex items-center gap-2">
-                        <span className="text-orange-500 text-lg">🔥</span>
-                        <h3 className="text-[14px] font-black text-white uppercase tracking-[0.2em]">Heat Ranking</h3>
+                        <h3 className="text-[14px] font-black text-white uppercase tracking-[0.4em]">Heat Ranking</h3>
                     </div>
-                    <span className="text-[#e63030] text-sm font-black">🔥</span>
                 </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    <div className="px-2 py-4 flex flex-col gap-1">
+                <div className="flex-1 overflow-hidden">
+                    <div className="flex flex-col h-full">
                         {/* Fake Tabs */}
-                        <div className="flex gap-4 px-4 mb-4 border-b border-white/5 pb-3">
-                            <span className="text-[11px] font-black uppercase tracking-widest text-[#e63030] cursor-pointer">Sinking</span>
-                            <span className="text-[11px] font-black uppercase tracking-widest text-white/30 hover:text-white transition-colors cursor-pointer">Heat & Feed</span>
+                        <div className="flex justify-center gap-6 px-4 py-3 border-b border-white/5 bg-white/[0.01]">
+                            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-[#e63030] cursor-pointer">Sinking</span>
+                            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-white/30 hover:text-white transition-colors cursor-pointer">Heat & Feed</span>
                         </div>
 
-                        {/* Popular List */}
-                        <div className="flex flex-col gap-6 px-4">
-                            {popular.map((anime, i) => (
-                                <div key={anime.id} className="flex items-center justify-between group cursor-pointer">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/10 shrink-0">
-                                            <img src={anime.posterImage} alt={anime.title} className="w-full h-full object-cover grayscale opacity-50 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-500" />
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-white font-bold text-sm line-clamp-1 group-hover:text-[#e63030] transition-colors">{anime.title}</span>
-                                            <span className="text-[#e63030] text-[9px] font-black uppercase tracking-widest mt-0.5">
-                                                {i === 0 ? "New" : i === 1 ? "Underrated" : "Top Pick"}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="text-white/20 group-hover:text-white transition-colors">
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path d="M9 5l7 7-7 7" /></svg>
-                                    </div>
-                                </div>
-                            ))}
+                        {/* Popular List - Horizontal Scroll */}
+                        <div className="flex-1 flex overflow-x-auto snap-x snap-mandatory custom-scrollbar-hide h-full items-center">
+                            <div className="flex gap-6 px-6 py-6">
+                                {filteredPopular.map((anime, i) => (
+                                    <AnimeCard key={anime.id} anime={anime} index={i} />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Box 2: Most Heat Gained (Restored Rounded Style) */}
-            <div className="bg-[#111118]/60 backdrop-blur-3xl border border-white/10 rounded-xl overflow-hidden shadow-2xl p-6 h-[300px] flex flex-col">
-                <h3 className="text-[18px] font-black text-white italic tracking-tighter mb-6 shrink-0">Most Heat Gained</h3>
+            {/* Box 2: Most Heat Gained */}
+            <div className="bg-white/[0.05] backdrop-blur-xl border border-white/5 rounded-none overflow-hidden shadow-2xl flex flex-col min-h-[300px]">
+                <div className="px-6 py-5 flex items-center justify-center border-b border-white/5 bg-white/[0.03]">
+                    <h3 className="text-[14px] font-black text-white uppercase text-center tracking-[0.4em] shrink-0">Most Heat Gained</h3>
+                </div>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar">
-                    <div className="flex flex-col gap-6">
-                        {trending.slice(0, 6).map((anime, i) => (
-                            <div key={anime.id} className="flex items-center gap-4 group cursor-pointer">
-                                <div className="w-14 h-14 rounded-lg overflow-hidden border border-white/10 shrink-0">
-                                    <img src={anime.posterImage} alt={anime.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                </div>
-                                <div className="flex flex-col flex-1">
-                                    <span className="text-white font-bold text-[15px] group-hover:text-[#e63030] transition-colors line-clamp-1">{anime.title}</span>
-                                    <span className={i === 0 ? "text-emerald-500 text-[10px] font-black uppercase tracking-widest" : "text-emerald-500/60 text-[10px] font-black uppercase tracking-widest"}>
-                                        {i === 0 ? "New" : "Underrated"}
-                                    </span>
+                <div className="flex-1 flex overflow-x-auto snap-x snap-mandatory custom-scrollbar-hide h-full items-center">
+                    <div className="flex gap-6 px-6 py-6">
+                        {filteredTrending.slice(0, 6).map((anime, i) => (
+                            <AnimeCard key={anime.id} anime={anime} index={i} />
+                        ))}
+                    </div>
+                </div>
+            </div>
+
+            {/* Verse Weekly Highlights — Dynamic Infinite Scroll */}
+            <div className="flex flex-col gap-4 shrink-0">
+                <div className="flex items-center justify-between px-2">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-[#d4915a]">Verse Weekly</span>
+                        <div className="h-[1px] w-4 bg-[#d4915a]/30" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Hall of Fame</span>
+                    </div>
+                </div>
+
+                <div className="relative h-80 sm:h-96 w-full overflow-hidden border-y border-white/5 bg-white/[0.02]">
+                    <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-[#130f12] to-transparent z-10" />
+                    <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-[#130f12] to-transparent z-10" />
+
+                    <div className="flex gap-4 animate-infinite-scroll py-8 px-4 w-max">
+                        {/* Render double for seamless loop */}
+                        {[...trending, ...trending].map((anime, idx) => (
+                            <div
+                                key={`${anime.id}-${idx}`}
+                                onClick={() => window.location.href = `/anime/${anime.id}`}
+                                className="relative w-44 sm:w-52 aspect-[2/3] shrink-0 group cursor-pointer rounded-lg overflow-hidden border border-white/5 hover:border-[#d4915a]/40 transition-all duration-500"
+                            >
+                                <img
+                                    src={anime.posterImage}
+                                    alt={anime.title}
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 brightness-75 group-hover:brightness-100"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent opacity-70 group-hover:opacity-50 transition-opacity" />
+
+                                <div className="absolute bottom-0 inset-x-0 p-5 z-20">
+                                    <p className="text-[10px] font-black text-[#d4915a] uppercase tracking-[0.2em] mb-1.5">Weekly Pick</p>
+                                    <h5 className="text-white text-[13px] font-black uppercase tracking-wider line-clamp-2 leading-tight drop-shadow-lg">{anime.title}</h5>
                                 </div>
                             </div>
                         ))}
@@ -104,32 +135,26 @@ export default function TrendingSidebar() {
                 </div>
             </div>
 
-            {/* Verse Weekly Recap Card (REVERTED TO ORIGINAL ROUNDED STYLE) */}
-            <div
-                className="relative overflow-hidden rounded-xl group cursor-pointer h-56 shrink-0"
-                onClick={() => trending[0] && (window.location.href = `/anime/${trending[0].id}`)}
-            >
-                <div className="absolute inset-0 bg-gradient-to-br from-[#e63030] to-orange-600 opacity-20 group-hover:opacity-30 transition-opacity" />
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-3xl" />
-
-                <div className="relative z-10 p-8 h-full flex flex-col">
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#e63030] mb-4">Verse Weekly</span>
-                    <h4 className="text-3xl font-black text-white italic leading-[1.1] mb-2 truncate">
-                        {trending[0]?.title || "The Anime Recap"}
-                    </h4>
-                    <p className="text-white/40 text-[12px] font-medium leading-relaxed mb-auto line-clamp-2">
-                        {trending[0]?.synopsis || "Don't miss the biggest shifts in the community this week."}
-                    </p>
-                    <div className="flex items-center gap-3 text-white font-black text-[11px] uppercase tracking-[0.3em] group-hover:gap-5 transition-all">
-                        Read More <span>→</span>
-                    </div>
-                </div>
-            </div>
-
             <style jsx global>{`
+                @keyframes infinite-scroll {
+                    from { transform: translateX(0); }
+                    to { transform: translateX(-50%); }
+                }
+                .animate-infinite-scroll {
+                    animation: infinite-scroll 40s linear infinite;
+                }
+                .animate-infinite-scroll:hover {
+                    animation-play-state: paused;
+                }
                 .custom-sidebar-container::-webkit-scrollbar,
-                .custom-scrollbar::-webkit-scrollbar {
+                .custom-scrollbar::-webkit-scrollbar,
+                .custom-scrollbar-hide::-webkit-scrollbar {
                     width: 2px;
+                    height: 0px;
+                }
+                .custom-scrollbar-hide {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
                 }
                 .custom-sidebar-container::-webkit-scrollbar-track,
                 .custom-scrollbar::-webkit-scrollbar-track {

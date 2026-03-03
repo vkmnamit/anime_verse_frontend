@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import AnimeCard from "@/src/components/AnimeCard/AnimeCard";
 import Carousel from "@/src/components/Carousel/Carousel";
 import { getPaginatedAnime, AnimeCard as AnimeCardType } from "@/src/lib/kitsu";
+import { useSearch } from "@/src/context/SearchContext";
 
 export default function InfiniteAnimeGrid() {
     const [animeList, setAnimeList] = useState<AnimeCardType[]>([]);
@@ -54,11 +55,24 @@ export default function InfiniteAnimeGrid() {
         };
     }, [offset, hasMore, loading]);
 
+    const { searchQuery } = useSearch();
+
+    // Filter anime by search query
+    const filteredList = useMemo(() => {
+        if (!searchQuery.trim()) return animeList;
+        const q = searchQuery.toLowerCase();
+        return animeList.filter(a =>
+            a.title.toLowerCase().includes(q) ||
+            a.synopsis?.toLowerCase().includes(q) ||
+            a.categories?.some(c => c.toLowerCase().includes(q))
+        );
+    }, [animeList, searchQuery]);
+
     // Group anime into rows for carousels
     // Each page (LIMIT) will be one row
     const rows: AnimeCardType[][] = [];
-    for (let i = 0; i < animeList.length; i += LIMIT) {
-        rows.push(animeList.slice(i, i + LIMIT));
+    for (let i = 0; i < filteredList.length; i += LIMIT) {
+        rows.push(filteredList.slice(i, i + LIMIT));
     }
 
     return (

@@ -2,7 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useAnimeModal } from "@/src/context/AnimeModalContext";
+import { useAuth } from "@/src/context/AuthContext";
 import { getTrendingAnime, getAnimeByCategory, type AnimeCard as AnimeCardType } from "@/src/lib/kitsu";
 import { api } from "@/src/lib/api";
 import Carousel from "../Carousel/Carousel";
@@ -10,8 +12,10 @@ import AnimeCard from "../AnimeCard/AnimeCard";
 
 export default function AnimeDetailModal() {
     const { isOpen, selectedAnime, closeModal, openModal } = useAnimeModal();
+    const { user, token } = useAuth();
     const [recommended, setRecommended] = useState<AnimeCardType[]>([]);
     const [comments, setComments] = useState<any[]>([]);
+    const [commentText, setCommentText] = useState("");
     const [isVisible, setIsVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isInWatchlist, setIsInWatchlist] = useState(false);
@@ -26,36 +30,54 @@ export default function AnimeDetailModal() {
 
     useEffect(() => {
         if (isOpen && selectedAnime) {
+            document.body.style.overflow = 'hidden';
             setIsVisible(true);
             setLoading(true);
 
-            // Fetch related anime based on category theme
-            const primaryCategory = selectedAnime.categories[0]?.toLowerCase() || "action";
+            // Fetch more diverse related anime by using multiple categories
+            const primaryCategories = selectedAnime.categories.slice(0, 2);
+            const recommendationFetches = primaryCategories.length > 0
+                ? primaryCategories.map(cat => getAnimeByCategory(cat.toLowerCase(), 20))
+                : [getTrendingAnime(20)];
 
             Promise.all([
-                getAnimeByCategory(primaryCategory, 20),
+                Promise.all(recommendationFetches),
                 api.anime.comments(selectedAnime.id).catch(() => ({ data: [] })),
-                api.reactions.getForAnime(selectedAnime.id).catch(() => ({ data: { breakdown: {} } }))
-            ]).then(([rec, comRes, reactRes]) => {
-                setRecommended(rec);
+            ]).then(([recArrays, comRes]) => {
+                // Flatten, deduplicate, and filter out current anime
+                const allRecs = recArrays.flat();
+                const uniqueRecs = Array.from(new Map(allRecs.map(a => [a.id, a])).values())
+                    .filter(a => a.id !== selectedAnime.id);
+
+                setRecommended(uniqueRecs.slice(0, 40));
+
                 if (comRes && comRes.data) {
                     setComments(comRes.data);
                 }
             }).finally(() => setLoading(false));
         } else {
+            document.body.style.overflow = 'unset';
             setIsVisible(false);
             setComments([]);
             setIsInWatchlist(false);
             setIsExpanded(false);
         }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
     }, [isOpen, selectedAnime]);
 
     const handleWatchlist = async () => {
         if (!selectedAnime) return;
+
+        if (!user || !token) {
+            alert("You must be logged in to modify your watchlist.");
+            return;
+        }
+
         setIsInWatchlist(!isInWatchlist);
 
         try {
-            const token = localStorage.getItem("token") || "";
             if (!isInWatchlist) {
                 await api.watchlist.add(selectedAnime.id, "watching", token);
             } else {
@@ -63,6 +85,31 @@ export default function AnimeDetailModal() {
             }
         } catch (err) {
             console.error("Watchlist error:", err);
+            // Revert state on error
+            setIsInWatchlist(isInWatchlist);
+        }
+    };
+
+    const handleCommentSubmit = async () => {
+        if (!user || !token) {
+            alert("You must be logged in to comment.");
+            return;
+        }
+        if (!commentText.trim() || !selectedAnime) return;
+
+        try {
+            await api.comments.create(selectedAnime.id, commentText.trim(), token);
+
+            // Refresh comments
+            const comRes = await api.anime.comments(selectedAnime.id).catch(() => ({ data: [] }));
+            if (comRes && comRes.data) {
+                setComments(comRes.data);
+            }
+
+            setCommentText(""); // Clear input
+        } catch (err) {
+            console.error("Comment submission error:", err);
+            alert("Failed to post comment.");
         }
     };
 
@@ -77,7 +124,7 @@ export default function AnimeDetailModal() {
             />
 
             {/* Modal Content */}
-            <div className={`relative w-full lg:w-full lg:h-full lg:max-w-7xl lg:max-h-screen bg-[#0b0b0f] lg:rounded-none overflow-y-auto no-scrollbar shadow-2xl transition-all duration-500 ${isVisible ? "scale-100 translate-y-0" : "scale-[0.98] translate-y-8"}`}>
+            <div className={`relative w-full lg:w-[92%] h-full lg:h-[92vh] lg:max-w-[1400px] lg:rounded-[24px] bg-[#0b0b0f] overflow-y-auto no-scrollbar shadow-2xl transition-all duration-500 border border-white/5 ${isVisible ? "scale-100 translate-y-0" : "scale-[0.98] translate-y-8"}`}>
 
                 {/* Close Button */}
                 <button
@@ -90,12 +137,12 @@ export default function AnimeDetailModal() {
                 </button>
 
                 {/* HERO BANNER SECTION */}
-                <div className="relative w-full h-[45vh] lg:h-[55vh]">
+                <div className="relative w-full h-[35vh] sm:h-[45vh] lg:h-[60vh]">
                     <Image
                         src={selectedAnime.coverImage || selectedAnime.posterImage}
                         alt={selectedAnime.title}
                         fill
-                        className="object-cover opacity-60"
+                        className="object-cover opacity-50 sm:opacity-60"
                         priority
                     />
                     {/* Hero Gradient Overlays */}
@@ -103,8 +150,8 @@ export default function AnimeDetailModal() {
                     <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-transparent" />
 
                     {/* Poster On Banner (No extra space needed) */}
-                    <div className="absolute bottom-8 left-6 lg:left-12 z-30">
-                        <div className="w-[140px] lg:w-[220px] aspect-[2/3] relative rounded-[12px] overflow-hidden border-[4px] border-white/10 shadow-2xl group">
+                    <div className="absolute bottom-6 left-6 lg:bottom-8 lg:left-12 z-30">
+                        <div className="w-[100px] sm:w-[140px] lg:w-[220px] aspect-[2/3] relative rounded-[8px] lg:rounded-[12px] overflow-hidden border-[2px] lg:border-[4px] border-white/10 shadow-2xl group">
                             <Image
                                 src={selectedAnime.posterImage}
                                 alt={selectedAnime.title}
@@ -116,15 +163,15 @@ export default function AnimeDetailModal() {
                 </div>
 
                 {/* CONTENT SECTION */}
-                <div className="max-w-[1400px] mx-auto px-6 lg:px-12 pb-16 grid grid-cols-1 lg:grid-cols-12 gap-16">
+                <div className="max-w-[1400px] mx-auto px-4 sm:px-8 lg:px-12 pb-16 grid grid-cols-1 xl:grid-cols-12 gap-8 xl:gap-16">
 
                     {/* LEFT COLUMN: Main Info */}
-                    <div className="lg:col-span-8 space-y-8 pt-10">
+                    <div className="xl:col-span-8 space-y-6 sm:space-y-8 pt-6 sm:pt-10">
 
                         {/* Title & Watchlist Hub (Netflix Style) */}
                         <div className="flex items-center flex-wrap gap-6 pt-2">
                             <h1
-                                className="text-3xl lg:text-5xl font-black text-white tracking-tight leading-tight"
+                                className="text-xl sm:text-2xl md:text-3xl lg:text-5xl font-black text-white tracking-tight leading-tight"
                                 style={{ fontFamily: 'var(--font-rubik), Rubik, sans-serif' }}
                             >
                                 {selectedAnime.title}
@@ -192,8 +239,8 @@ export default function AnimeDetailModal() {
                         </section>
                     </div>
 
-                    {/* RIGHT COLUMN: Community Sidebar (Redesigned per screenshot) */}
-                    <div className="lg:col-span-4 self-start sticky top-10">
+                    {/* RIGHT COLUMN: Community Sidebar */}
+                    <div className="xl:col-span-4 self-start sticky top-10">
                         <div className="bg-[#0b0b0f]/60 backdrop-blur-2xl border border-white/10 rounded-[12px] shadow-2xl overflow-hidden shadow-black/50">
                             {/* Header */}
                             <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
@@ -236,19 +283,37 @@ export default function AnimeDetailModal() {
                                 )}
                             </div>
 
-                            {/* Interactive Input (Integrated) */}
-                            <div className="p-6 pt-0 mt-2">
-                                <div className="border border-white/10 bg-white/[0.03] rounded-lg p-1.5 flex items-center shadow-inner">
-                                    <input
-                                        type="text"
-                                        placeholder="Add a comment..."
-                                        className="bg-transparent border-none outline-none text-[13px] text-white/80 placeholder:text-white/20 px-3 w-full font-medium"
+                            {/* Interactive Input (Slack/Discord Redesign) */}
+                            <div className="p-6 pt-2">
+                                <div className="bg-white/[0.03] border border-white/10 rounded-sm overflow-hidden focus-within:border-[#e63030]/50 transition-all">
+                                    <textarea
+                                        placeholder="Add a hot take..."
+                                        className="w-full bg-transparent border-none outline-none text-[15px] text-white/90 placeholder:text-white/20 px-4 py-4 min-h-[80px] resize-none font-medium no-scrollbar"
+                                        value={commentText}
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                                e.preventDefault();
+                                                handleCommentSubmit();
+                                            }
+                                        }}
                                     />
-                                    <button className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/5 hover:bg-[#e63030] text-white/40 hover:text-white transition-all active:scale-90 group/send">
-                                        <svg className="w-4 h-4 transition-transform group-hover/send:translate-x-0.5 group-hover/send:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                                        </svg>
-                                    </button>
+
+                                    {/* Action Bar — Simplified Rectangle */}
+                                    <div className="px-3 py-2 bg-white/[0.02] border-t border-white/5 flex items-center justify-end">
+
+
+                                        <button
+                                            onClick={handleCommentSubmit}
+                                            disabled={!commentText.trim()}
+                                            className={`px-6 py-2 flex items-center justify-center rounded-sm transition-all active:scale-95 group/send text-[12px] font-bold uppercase tracking-widest ${commentText.trim()
+                                                ? "bg-[#e63030] text-white"
+                                                : "bg-white/5 text-white/20"
+                                                }`}
+                                        >
+                                            Post Reaction
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -256,7 +321,17 @@ export default function AnimeDetailModal() {
                 </div>
 
                 {/* RECOMMENDATIONS SECTION */}
-                <div className="pb-24 pt-16 border-t border-white/5">
+                <div className="pb-24 pt-16 border-t border-white/5 relative">
+                    <div className="flex items-center justify-between px-6 lg:px-12 mb-2 absolute top-18 right-0 z-10 w-full">
+                        <div className="flex-1" />
+                        <Link
+                            href={`/discover?genre=${selectedAnime.categories[0]?.toLowerCase() || 'action'}`}
+                            className="text-[12px] font-bold text-[#e63030] hover:underline uppercase tracking-widest"
+                            onClick={closeModal}
+                        >
+                            Explore More →
+                        </Link>
+                    </div>
                     <Carousel title="You Might Also Like">
                         {recommended.map((anime, idx) => (
                             <AnimeCard key={anime.id} anime={anime} index={idx} />
