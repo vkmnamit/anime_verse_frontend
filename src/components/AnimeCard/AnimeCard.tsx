@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import type { AnimeCard as AnimeCardType } from "@/src/lib/kitsu";
 import { useAnimeModal } from "@/src/context/AnimeModalContext";
+import { useAuth } from "@/src/context/AuthContext";
+import { api } from "@/src/lib/api";
+import { useRouter } from "next/navigation";
 
 /* Clean sentiment / reaction badges */
 function getReactionBadge(anime: AnimeCardType, index: number) {
@@ -25,15 +28,29 @@ interface Props {
 export default function AnimeCard({ anime, index = 0, variant = "default" }: Props) {
     const tag = getReactionBadge(anime, index);
     const { openModal } = useAnimeModal();
+    const { token, user } = useAuth();
+    const router = useRouter();
     const isLarge = variant === "large";
     const [wishlisted, setWishlisted] = useState(false);
     const [commentCount, setCommentCount] = useState<number | null>(null);
+    const [isSyncing, setIsSyncing] = useState(false);
 
-    // Fetch real comment count from backend
+    // 1. Check if wishlisted on mount
     useEffect(() => {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        if (!apiUrl) return;
+        if (!token) return;
+        api.watchlist.list(token)
+            .then((data: any) => {
+                const list = data?.data || data || [];
+                // Check if this anime ID is in the user's watchlist
+                const exists = list.some((item: any) => String(item.anime_id) === String(anime.id));
+                setWishlisted(exists);
+            })
+            .catch(() => { });
+    }, [anime.id, token]);
 
+    // 2. Fetch real comment count from backend
+    useEffect(() => {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
         fetch(`${apiUrl}/comments/anime/${anime.id}?limit=1`)
             .then(res => res.json())
             .then(data => {
@@ -46,9 +63,33 @@ export default function AnimeCard({ anime, index = 0, variant = "default" }: Pro
             .catch(() => setCommentCount(0));
     }, [anime.id]);
 
-    const handleWishlist = (e: React.MouseEvent) => {
+    const handleWishlist = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        setWishlisted(!wishlisted);
+        if (!token) {
+            router.push("/auth");
+            return;
+        }
+
+        if (isSyncing) return;
+
+        // Optimistic UI
+        const nextState = !wishlisted;
+        setWishlisted(nextState);
+        setIsSyncing(true);
+
+        try {
+            if (nextState) {
+                await api.watchlist.add(anime.id, "planned", token);
+            } else {
+                await api.watchlist.remove(anime.id, token);
+            }
+        } catch (err) {
+            // Revert on error
+            setWishlisted(!nextState);
+            console.error("Wishlist sync failed:", err);
+        } finally {
+            setIsSyncing(false);
+        }
     };
 
     return (

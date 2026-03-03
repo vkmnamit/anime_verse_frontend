@@ -1,9 +1,12 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Navbar from "@/src/components/Navbar/Navbar";
 import { api } from "@/src/lib/api";
 import { useParams } from "next/navigation";
+import { useAuth } from "@/src/context/AuthContext";
 
 const BattleCard = ({ side, anime, onVote, voted }: { side: "left" | "right", anime: any, onVote: (side: "A" | "B") => void, voted: boolean }) => {
     return (
@@ -79,6 +82,7 @@ const BattleCard = ({ side, anime, onVote, voted }: { side: "left" | "right", an
 
 export default function BattlePage() {
     const params = useParams();
+    const { user, token } = useAuth();
     const [battle, setBattle] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [votedSide, setVotedSide] = useState<"A" | "B" | null>(null);
@@ -120,8 +124,18 @@ export default function BattlePage() {
     }, [params.id]);
 
     const handleVote = async (side: "A" | "B") => {
-        setVotedSide(side);
-        // api.battles.vote(battle.id, side, token)
+        if (!user || !token) {
+            alert("You need to be logged in to vote!");
+            return;
+        }
+
+        try {
+            await api.battles.vote(battle.id, side, token);
+            setVotedSide(side);
+        } catch (err) {
+            console.error("Failed to vote:", err);
+            alert("Failed to register vote. Please try again.");
+        }
     };
 
     if (loading || !battle) {
