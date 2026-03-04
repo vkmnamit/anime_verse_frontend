@@ -88,7 +88,7 @@ function AuthForm() {
             </div>
 
             {/* --- POPUP BOX (Center) --- */}
-            <div className="w-[425px] h-auto min-h-[460px] my-12 bg-white/[0.01] backdrop-blur-[12px] border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.6)] relative z-10 flex flex-col gap-6 px-[34px] py-[32px] rounded-[32px] animate-in fade-in zoom-in duration-500">
+            <div className="w-full max-w-[425px] min-h-[460px] my-8 bg-white/[0.01] backdrop-blur-[12px] border border-white/10 shadow-[0_40px_100px_rgba(0,0,0,0.6)] relative z-10 flex flex-col gap-5 px-5 sm:px-[34px] py-7 sm:py-[32px] rounded-3xl sm:rounded-[32px] animate-in fade-in zoom-in duration-500">
 
                 {/* Close Button */}
                 <button
@@ -142,7 +142,7 @@ function AuthForm() {
                             placeholder="Username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
-                            className="w-[355px] h-[46px] mx-auto block bg-transparent border border-white/10 rounded-[16px] px-[14px] text-white placeholder-white/20 focus:outline-none focus:border-[#e63030]/50 transition-colors"
+                            className="w-full h-[46px] bg-transparent border border-white/10 rounded-[16px] px-[14px] text-white placeholder-white/20 focus:outline-none focus:border-[#e63030]/50 transition-colors"
                             required
                         />
                     )}
@@ -152,11 +152,11 @@ function AuthForm() {
                         placeholder="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-[355px] h-[46px] mx-auto block bg-transparent border border-white/10 rounded-[16px] px-[14px] text-white placeholder-white/20 focus:outline-none focus:border-[#e63030]/50 transition-colors"
+                        className="w-full h-[46px] bg-transparent border border-white/10 rounded-[16px] px-[14px] text-white placeholder-white/20 focus:outline-none focus:border-[#e63030]/50 transition-colors"
                         required
                     />
 
-                    <div className="relative w-[355px] h-[46px] mx-auto">
+                    <div className="relative w-full h-[46px]">
                         <input
                             type={showPassword ? "text" : "password"}
                             placeholder="Password"
@@ -179,7 +179,7 @@ function AuthForm() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-[355px] h-[46px] mx-auto bg-[#e63030] hover:bg-[#ff4545] text-white font-bold rounded-xl transition-all active:scale-[0.98] shadow-[0_0_20px_rgba(230,48,48,0.3)] disabled:opacity-50"
+                        className="w-full h-[46px] bg-[#e63030] hover:bg-[#ff4545] text-white font-bold rounded-xl transition-all active:scale-[0.98] shadow-[0_0_20px_rgba(230,48,48,0.3)] disabled:opacity-50"
                     >
                         {loading ? "Processing..." : mode === "signin" ? "Sign In" : "Sign Up"}
                     </button>
