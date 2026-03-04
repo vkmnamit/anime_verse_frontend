@@ -2,28 +2,58 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { api } from "@/src/lib/api";
+import { useAuth } from "@/src/context/AuthContext";
 
 interface ProfileHeroProps {
     user: {
         username: string;
         avatar: string;
+        banner?: string | null;
         bio: string;
         tags: string[];
         isVip?: boolean;
     };
+    stats?: {
+        follower_count: number;
+        following_count: number;
+        is_following: boolean;
+        reactions_given: number;
+        opinions_posted: number;
+    } | null;
     isOwnProfile?: boolean;
     onProfileUpdated?: () => void;
 }
 
-export default function ProfileHero({ user, isOwnProfile }: ProfileHeroProps) {
+export default function ProfileHero({ user, stats, isOwnProfile, onProfileUpdated }: ProfileHeroProps) {
     const router = useRouter();
+    const { token } = useAuth();
+    const [followingLoading, setFollowingLoading] = useState(false);
+
+    const handleFollowToggle = async () => {
+        if (!token || !user.username) return;
+        setFollowingLoading(true);
+        try {
+            if (stats?.is_following) {
+                await api.user.unfollow(user.username, token);
+            } else {
+                await api.user.follow(user.username, token);
+            }
+            if (onProfileUpdated) onProfileUpdated();
+        } catch (err) {
+            console.error("Follow toggle failed", err);
+        } finally {
+            setFollowingLoading(false);
+        }
+    };
 
     return (
         <div className="relative w-full rounded-none overflow-hidden mb-6 group border border-white/[0.04]">
-            {/* Banner Background — Cosmic Galaxy */}
-            <div className="relative h-64 md:h-80 w-full overflow-hidden">
+            {/* Banner Background — Custom or Galactic */}
+            <div className="relative h-64 md:h-80 w-full overflow-hidden bg-[#0b0b0f]">
                 <Image
-                    src="https://images.unsplash.com/photo-1462331940025-496df975641f?w=1600&h=600&fit=crop&q=100"
+                    src={user.banner || "https://images.unsplash.com/photo-1462331940025-496df975641f?w=1600&h=600&fit=crop&q=100"}
                     alt="Cover"
                     fill
                     className="object-cover transition-transform duration-1000 group-hover:scale-105"
@@ -31,6 +61,7 @@ export default function ProfileHero({ user, isOwnProfile }: ProfileHeroProps) {
                 />
 
                 {/* Multi-layered premium overlays */}
+                <div className="absolute inset-0 backdrop-blur-[2px] bg-black/10" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0f] via-[#0b0b0f]/40 to-transparent" />
                 <div className="absolute inset-0 bg-[#e63030]/10 mix-blend-overlay" />
                 <div className="absolute inset-0 bg-gradient-to-r from-[#0b0b0f]/80 via-[#0b0b0f]/30 to-transparent" />
@@ -61,9 +92,26 @@ export default function ProfileHero({ user, isOwnProfile }: ProfileHeroProps) {
                             <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight drop-shadow-md">
                                 {user?.username || "Unknown User"}
                             </h1>
-                            <span className="text-yellow-400 text-xl drop-shadow-sm">⭐</span>
+                            <div className="flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-none transform skew-x-[-12deg]">
+                                <span className="text-yellow-400 font-black text-xs skew-x-[12deg]">9.8 GPA</span>
+                            </div>
                         </div>
-                        <p className="text-white/50 text-base font-medium">@{user?.username || "unknown"}</p>
+                        <div className="flex items-center gap-8 mt-1 mb-2">
+                            <div
+                                onClick={() => router.push(`/profile/${user.username}/followers`)}
+                                className="cursor-pointer"
+                            >
+                                <span className="text-white font-black text-lg transition-colors">{stats?.follower_count || 0}</span>
+                                <span className="ml-2 text-white/20 text-[10px] font-black uppercase tracking-[0.3em]">Followers</span>
+                            </div>
+                            <div
+                                onClick={() => router.push(`/profile/${user.username}/following`)}
+                                className="cursor-pointer"
+                            >
+                                <span className="text-white font-black text-lg transition-colors">{stats?.following_count || 0}</span>
+                                <span className="ml-2 text-white/20 text-[10px] font-black uppercase tracking-[0.3em]">Following</span>
+                            </div>
+                        </div>
                         <p className="text-[#c0c0d8] text-base md:text-lg max-w-2xl leading-relaxed mt-1 font-medium drop-shadow-sm italic">
                             {user.bio}
                         </p>
@@ -79,7 +127,7 @@ export default function ProfileHero({ user, isOwnProfile }: ProfileHeroProps) {
                         </div>
                     </div>
 
-                    {/* Edit Profile Button */}
+                    {/* Action Button */}
                     <div className="self-start md:self-end">
                         {isOwnProfile ? (
                             <button
@@ -89,8 +137,12 @@ export default function ProfileHero({ user, isOwnProfile }: ProfileHeroProps) {
                                 Edit Profile
                             </button>
                         ) : (
-                            <button className="px-8 py-3 bg-white hover:bg-white/90 text-black text-[11px] font-black uppercase tracking-[0.2em] rounded-none transition-all active:scale-95">
-                                Follow
+                            <button
+                                onClick={handleFollowToggle}
+                                disabled={followingLoading}
+                                className={`px-8 py-3 ${stats?.is_following ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-white hover:bg-white/90 text-black'} text-[11px] font-black uppercase tracking-[0.2em] rounded-none transition-all active:scale-95 disabled:opacity-50`}
+                            >
+                                {followingLoading ? "..." : (stats?.is_following ? "Following" : "Follow")}
                             </button>
                         )}
                     </div>
