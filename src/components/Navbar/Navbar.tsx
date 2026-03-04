@@ -66,7 +66,7 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
     return (
         <>
             {/* ===== Top Navbar ===== */}
-            <nav className="fixed top-0 left-0 w-full h-16 z-[999] bg-black border-b border-white/[0.04]">
+            <nav className="fixed top-0 left-0 w-full h-16 z-[999] bg-[#0b0b0f] border-b border-white/[0.04]">
                 <div className="w-full h-full flex items-center px-4 md:px-8 lg:px-12 gap-3 lg:gap-8">
 
                     {/* Mobile Menu Toggle */}
@@ -186,7 +186,7 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
                                                         <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/10 shadow-lg shadow-black/40">
                                                             <Image
                                                                 src={user.avatar_url || "/default-avatar.png"}
-                                                                alt={user.username}
+                                                                alt={user.username || "Profile"}
                                                                 width={56}
                                                                 height={56}
                                                                 className="w-full h-full object-cover"
@@ -198,10 +198,10 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
                                                     {/* Name + Handle */}
                                                     <div className="flex-1 min-w-0 pt-0.5">
                                                         <div className="flex items-center gap-1.5">
-                                                            <h4 className="text-[15px] font-bold text-white truncate">{user.username}</h4>
+                                                            <h4 className="text-[15px] font-bold text-white truncate">{user.username || "User"}</h4>
                                                             <span className="text-yellow-400 text-sm">⭐</span>
                                                         </div>
-                                                        <p className="text-xs text-white/40 mt-0.5 truncate">@{user.username}</p>
+                                                        <p className="text-xs text-white/40 mt-0.5 truncate">@{user.username || "user"}</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -209,7 +209,7 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
                                             {/* Menu Items */}
                                             <div className="py-2 px-2">
                                                 <Link
-                                                    href={`/profile/${user.username}`}
+                                                    href={`/profile/${user.username || "unset"}`}
                                                     onClick={() => setProfileOpen(false)}
                                                     className="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-[13px] font-medium text-white/70 hover:text-white hover:bg-white/[0.06] transition-all group"
                                                 >
@@ -222,7 +222,7 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
                                                 </Link>
 
                                                 <Link
-                                                    href={`/profile/${user.username}?tab=watchlist`}
+                                                    href={`/profile/${user.username || "unset"}?tab=watchlist`}
                                                     onClick={() => setProfileOpen(false)}
                                                     className="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-[13px] font-medium text-white/70 hover:text-white hover:bg-white/[0.06] transition-all group"
                                                 >

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { api } from "@/src/lib/api";
+import { api, setOnAuthError } from "@/src/lib/api";
 import { useRouter } from "next/navigation";
 
 interface User {
@@ -11,6 +11,9 @@ interface User {
     avatar_url?: string;
     bio?: string;
     genres?: string[];
+    twitter?: string;
+    instagram?: string;
+    facebook?: string;
 }
 
 interface AuthContextType {
@@ -33,6 +36,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const router = useRouter();
 
     useEffect(() => {
+        // Register global auth error handler
+        setOnAuthError(() => {
+            setToken(null);
+            setUser(null);
+            localStorage.removeItem("auth_token");
+            router.push("/auth");
+        });
+
         // Hydrate from localStorage
         const storedToken = localStorage.getItem("auth_token");
         if (storedToken) {
@@ -49,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
             setLoading(false);
         }
-    }, []);
+    }, [router]);
 
     const login = async (data: any) => {
         const res = await api.auth.login(data);

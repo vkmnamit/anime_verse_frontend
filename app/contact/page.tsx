@@ -1,3 +1,5 @@
+"use client";
+
 import Navbar from "@/src/components/Navbar/Navbar";
 import Image from "next/image";
 import Link from "next/link";

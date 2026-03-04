@@ -169,58 +169,77 @@ export default function CommunityFeed({
                                 )}
                             </div>
 
-                            {/* Image */}
-                            <div
-                                className="w-full flex justify-center relative cursor-pointer"
-                                onClick={() => ((post.is_spoiler || post.isSpoiler) ? setRevealedPosts(prev => ({ ...prev, [post.id]: true })) : null)}
-                            >
-                                <img
-                                    src={post.image_url || post.image}
-                                    alt={post.title}
-                                    className={`w-full max-h-[440px] object-cover transition-all duration-700 ${(post.is_spoiler || post.isSpoiler) && !revealedPosts[post.id] ? "blur-2xl opacity-30" : ""}`}
-                                />
-                                {(post.is_spoiler || post.isSpoiler) && !revealedPosts[post.id] && (
-                                    <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.35)", backdropFilter: "blur(20px)" }}>
-                                        <div className="px-4 py-1.5 rounded-xl flex items-center gap-2" style={{ background: "rgba(255,255,255,0.09)", border: "1px solid rgba(255,255,255,0.10)" }}>
-                                            <span className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.75)" }}>View spoiler</span>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                            {/* Content Preview (Text) */}
+                            {post.content && (
+                                <div className={`px-5 pb-3 ${!(post.image_url || post.image) ? "" : "line-clamp-3"}`}>
+                                    <p className="text-[14px] leading-relaxed text-white/80 whitespace-pre-wrap font-medium">
+                                        {post.content}
+                                    </p>
+                                </div>
+                            )}
 
-                            {/* Action bar — smaller, subtler */}
-                            <div className="flex items-center gap-1.5 px-5 py-2">
+                            {/* Image */}
+                            {(post.image_url || post.image) && (
+                                <div
+                                    className="w-full flex justify-center relative bg-[#050505] cursor-pointer mt-1 border-t border-b border-white/[0.02]"
+                                    onClick={() => ((post.is_spoiler || post.isSpoiler) ? setRevealedPosts(prev => ({ ...prev, [post.id]: true })) : null)}
+                                >
+                                    <img
+                                        src={post.image_url || post.image}
+                                        alt={post.title}
+                                        className={`w-full max-h-[550px] object-contain transition-all duration-700 ${(post.is_spoiler || post.isSpoiler) && !revealedPosts[post.id] ? "blur-2xl opacity-30" : ""}`}
+                                    />
+                                    {(post.is_spoiler || post.isSpoiler) && !revealedPosts[post.id] && (
+                                        <div className="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-2xl">
+                                            <div className="px-5 py-2.5 rounded-full flex items-center gap-2" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", backdropFilter: "blur(10px)" }}>
+                                                <span className="text-[13px] font-bold text-white uppercase tracking-wider">Tap to reveal spoiler</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Action bar — Reddit style */}
+                            <div className="flex items-center gap-2 px-4 py-2 mt-1">
                                 {/* Upvote pill */}
-                                <div className="flex items-center rounded-full h-7 px-1 gap-0.5"
-                                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                                <div className="flex items-center rounded-full h-9 px-1 gap-1"
+                                    style={{ background: "rgba(255,255,255,0.06)" }}>
                                     <button
                                         onClick={() => handleLike(post.id)}
-                                        className="w-7 h-[22px] flex items-center justify-center rounded-full transition-all"
-                                        style={{ color: likedPosts.includes(post.id) ? "#e63030" : "rgba(255,255,255,0.35)" }}
+                                        className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/[0.08] transition-colors"
+                                        style={{ color: likedPosts.includes(post.id) ? "#FF4500" : "rgba(255,255,255,0.6)" }}
                                     >
-                                        <svg className="w-3.5 h-3.5" fill={likedPosts.includes(post.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
+                                        <svg className="w-5 h-5" fill={likedPosts.includes(post.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 15l8-8 8 8" /></svg>
                                     </button>
-                                    <span className="text-[12px] font-bold px-1 select-none min-w-4 text-center"
-                                        style={{ color: likedPosts.includes(post.id) ? "#e63030" : "rgba(255,255,255,0.60)" }}>
+                                    <span className="text-[13px] font-bold select-none min-w-[20px] text-center"
+                                        style={{ color: likedPosts.includes(post.id) ? "#FF4500" : "rgba(255,255,255,0.8)" }}>
                                         {post.votes + (likedPosts.includes(post.id) ? 1 : 0)}
                                     </span>
-                                    <button className="w-7 h-[22px] flex items-center justify-center rounded-full transition-all"
-                                        style={{ color: "rgba(255,255,255,0.35)" }}>
-                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                                    <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/[0.08] transition-colors text-white/60 hover:text-[#7193ff]">
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20 9l-8 8-8-8" /></svg>
                                     </button>
                                 </div>
 
                                 {/* Comments */}
                                 <button
                                     onClick={() => toggleComments(post.id)}
-                                    className="flex items-center gap-1.5 h-7 px-2.5 rounded-full transition-all text-[11px] font-semibold"
+                                    className="flex items-center gap-2 h-9 px-3.5 rounded-full transition-colors text-[13px] font-bold hover:bg-white/[0.08]"
                                     style={openComments[post.id]
-                                        ? { background: "rgba(230,48,48,0.10)", border: "1px solid rgba(230,48,48,0.25)", color: "#e63030" }
-                                        : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.40)" }
+                                        ? { background: "rgba(255,255,255,0.12)", color: "#fff" }
+                                        : { background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.8)" }
                                     }
                                 >
-                                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-                                    {post.comment_count ?? post.commentCount}
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                    {post.comment_count ?? post.commentCount ?? 0}
+                                </button>
+
+                                {/* Share */}
+                                <button
+                                    onClick={() => handleShare(post.id)}
+                                    className="flex items-center gap-2 h-9 px-3.5 rounded-full transition-colors text-[13px] font-bold bg-white/[0.06] hover:bg-white/[0.08] text-white/80"
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                                    Share
                                 </button>
                             </div>
 

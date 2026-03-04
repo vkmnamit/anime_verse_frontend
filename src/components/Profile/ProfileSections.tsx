@@ -39,7 +39,9 @@ const topAnimeData = [
 ];
 
 // ─── Top Anime Section (Rectangular Boxes) ──────────────────────────────────
-export function TopAnimeSection() {
+export function TopAnimeSection({ anime }: { anime: any[] }) {
+    const displayList = anime?.length > 0 ? anime : [];
+
     return (
         <div className="mt-6 mb-12 group">
             <div className="flex flex-col items-center gap-4 mb-10">
@@ -47,37 +49,39 @@ export function TopAnimeSection() {
                 <div className="w-16 h-[2px] bg-[#e63030] opacity-30" />
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {topAnimeData.map((anime) => (
-                    <div key={anime.title} className="relative aspect-[2/3] rounded-none overflow-hidden group/card cursor-pointer border border-white/[0.04] hover:border-[#e63030]/40 transition-all duration-700 shadow-2xl bg-[#0b0b0f]">
-                        <Image
-                            src={anime.image}
-                            alt={anime.title}
-                            fill
-                            className="object-cover grayscale-[40%] group-hover/card:grayscale-0 group-hover/card:scale-110 transition-all duration-1000"
-                        />
-                        {/* Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-70 group-hover/card:opacity-90 transition-opacity" />
+            {displayList.length === 0 ? (
+                <div className="bg-white/[0.02] border border-white/[0.05] p-20 flex flex-col items-center justify-center text-center">
+                    <p className="text-[11px] font-black text-white/20 uppercase tracking-[0.3em]">No Signal Transmissions Found</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {displayList.map((item) => (
+                        <div key={item.id} className="relative aspect-[2/3] rounded-none overflow-hidden group/card cursor-pointer border border-white/[0.04] hover:border-[#e63030]/40 transition-all duration-700 shadow-2xl bg-[#0b0b0f]">
+                            <Image
+                                src={item.posterImage}
+                                alt={item.title}
+                                fill
+                                className="object-cover grayscale-[40%] group-hover/card:grayscale-0 group-hover/card:scale-110 transition-all duration-1000"
+                            />
+                            {/* Overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-70 group-hover/card:opacity-90 transition-opacity" />
 
-                        {/* Inner stroke on hover */}
-                        <div className="absolute inset-4 border border-white/0 group-hover/card:border-white/10 transition-all duration-700 pointer-events-none" />
+                            <div className="absolute inset-4 border border-white/0 group-hover/card:border-white/10 transition-all duration-700 pointer-events-none" />
 
-                        <div className="absolute bottom-0 left-0 right-0 p-5 flex flex-col items-center text-center">
-                            <h3 className="text-[14px] font-black uppercase tracking-tight text-white mb-3 group-hover/card:text-[#e63030] transition-colors drop-shadow-2xl">{anime.title}</h3>
-                            <div className="flex flex-col items-center gap-2">
-                                <div className="px-3 py-1 bg-white/[0.05] border border-white/[0.1] rounded-none">
-                                    <span className="text-[9px] font-black uppercase tracking-widest text-white/40">{anime.category}</span>
+                            <div className="absolute bottom-0 left-0 right-0 p-5 flex flex-col items-center text-center">
+                                <h3 className="text-[14px] font-black uppercase tracking-tight text-white mb-3 group-hover/card:text-[#e63030] transition-colors drop-shadow-2xl">{item.title}</h3>
+                                <div className="flex flex-col items-center gap-2">
+                                    {item.rating > 0 && (
+                                        <span className="text-[11px] font-black italic text-[#e63030] tracking-tighter">
+                                            Signal Strength: {item.rating}%
+                                        </span>
+                                    )}
                                 </div>
-                                {anime.rating && (
-                                    <span className="text-[11px] font-black italic text-[#e63030] tracking-tighter">
-                                        Signal Strength: {anime.rating}%
-                                    </span>
-                                )}
                             </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

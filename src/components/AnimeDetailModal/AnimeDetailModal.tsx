@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAnimeModal } from "@/src/context/AnimeModalContext";
 import { useAuth } from "@/src/context/AuthContext";
+import { useRouter } from "next/navigation";
 import { getTrendingAnime, getAnimeByCategory, type AnimeCard as AnimeCardType } from "@/src/lib/kitsu";
 import { api } from "@/src/lib/api";
 import Carousel from "../Carousel/Carousel";
@@ -13,12 +14,14 @@ import AnimeCard from "../AnimeCard/AnimeCard";
 export default function AnimeDetailModal() {
     const { isOpen, selectedAnime, closeModal, openModal } = useAnimeModal();
     const { user, token } = useAuth();
+    const router = useRouter();
     const [recommended, setRecommended] = useState<AnimeCardType[]>([]);
     const [comments, setComments] = useState<any[]>([]);
     const [commentText, setCommentText] = useState("");
     const [isVisible, setIsVisible] = useState(false);
     const [loading, setLoading] = useState(false);
     const [isInWatchlist, setIsInWatchlist] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
 
     // Dynamic Truncation for Synopsis
@@ -43,7 +46,9 @@ export default function AnimeDetailModal() {
             Promise.all([
                 Promise.all(recommendationFetches),
                 api.anime.comments(selectedAnime.id).catch(() => ({ data: [] })),
-            ]).then(([recArrays, comRes]) => {
+                token ? api.watchlist.list(token).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+                token ? api.reactions.getMine(selectedAnime.id, token).catch(() => ({ data: null })) : Promise.resolve({ data: null })
+            ]).then(([recArrays, comRes, watchRes, reactRes]) => {
                 // Flatten, deduplicate, and filter out current anime
                 const allRecs = recArrays.flat();
                 const uniqueRecs = Array.from(new Map(allRecs.map(a => [a.id, a])).values())
@@ -54,12 +59,21 @@ export default function AnimeDetailModal() {
                 if (comRes && comRes.data) {
                     setComments(comRes.data);
                 }
+
+                // Sync watchlist state
+                const watchlistItems = watchRes?.data || watchRes || [];
+                const isSaved = watchlistItems.some((item: any) => String(item.anime_id) === String(selectedAnime.id));
+                setIsInWatchlist(isSaved);
+
+                // Sync like state
+                setIsLiked(!!reactRes?.data);
             }).finally(() => setLoading(false));
         } else {
             document.body.style.overflow = 'unset';
             setIsVisible(false);
             setComments([]);
             setIsInWatchlist(false);
+            setIsLiked(false);
             setIsExpanded(false);
         }
         return () => {
@@ -69,36 +83,60 @@ export default function AnimeDetailModal() {
 
     const handleWatchlist = async () => {
         if (!selectedAnime) return;
-
         if (!user || !token) {
-            alert("You must be logged in to modify your watchlist.");
+            closeModal();
+            router.push("/auth");
             return;
         }
 
-        setIsInWatchlist(!isInWatchlist);
+        const nextState = !isInWatchlist;
+        setIsInWatchlist(nextState);
 
         try {
-            if (!isInWatchlist) {
-                await api.watchlist.add(selectedAnime.id, "watching", token);
+            if (nextState) {
+                await api.watchlist.add(selectedAnime.id, "planned", token, selectedAnime);
             } else {
                 await api.watchlist.remove(selectedAnime.id, token);
             }
         } catch (err) {
             console.error("Watchlist error:", err);
-            // Revert state on error
-            setIsInWatchlist(isInWatchlist);
+            setIsInWatchlist(!nextState);
+        }
+    };
+
+    const handleLike = async () => {
+        if (!selectedAnime) return;
+        if (!user || !token) {
+            closeModal();
+            router.push("/auth");
+            return;
+        }
+
+        const nextState = !isLiked;
+        setIsLiked(nextState);
+
+        try {
+            if (nextState) {
+                await api.reactions.create(selectedAnime.id, "fire", token);
+            } else {
+                await api.reactions.remove(selectedAnime.id, token);
+            }
+        } catch (err) {
+            console.error("Like error:", err);
+            setIsLiked(!nextState);
         }
     };
 
     const handleCommentSubmit = async () => {
         if (!user || !token) {
-            alert("You must be logged in to comment.");
+            closeModal();
+            router.push("/auth");
             return;
         }
         if (!commentText.trim() || !selectedAnime) return;
 
         try {
-            await api.comments.create(selectedAnime.id, commentText.trim(), token);
+            await api.comments.create(selectedAnime.id, commentText.trim(), token, undefined, selectedAnime);
 
             // Refresh comments
             const comRes = await api.anime.comments(selectedAnime.id).catch(() => ({ data: [] }));
@@ -177,19 +215,38 @@ export default function AnimeDetailModal() {
                                 {selectedAnime.title}
                             </h1>
 
-                            <button
-                                onClick={handleWatchlist}
-                                className={`px-6 py-2.5 rounded-sm font-bold text-[13px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0 ${isInWatchlist
-                                    ? "bg-white text-black"
-                                    : "bg-[#e63030] text-white hover:bg-[#ff4a4a]"
-                                    }`}
-                                style={{ fontFamily: 'var(--font-inter), Inter, sans-serif' }}
-                            >
-                                <svg className={`w-4 h-4 transition-transform ${isInWatchlist ? "rotate-45" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                                </svg>
-                                {isInWatchlist ? "In My List" : "Add to List"}
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={handleWatchlist}
+                                    className={`px-6 py-2.5 rounded-sm font-bold text-[13px] uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0 ${isInWatchlist
+                                        ? "bg-white text-black"
+                                        : "bg-[#e63030] text-white hover:bg-[#ff4a4a]"
+                                        }`}
+                                    style={{ fontFamily: 'var(--font-inter), Inter, sans-serif' }}
+                                >
+                                    <svg className={`w-4 h-4 transition-transform ${isInWatchlist ? "rotate-45" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                                    </svg>
+                                    {isInWatchlist ? "In My List" : "Add to List"}
+                                </button>
+
+                                <button
+                                    onClick={handleLike}
+                                    className={`w-[45px] h-[45px] rounded-sm flex items-center justify-center transition-all active:scale-90 border ${isLiked
+                                        ? "bg-[#e63030]/10 border-[#e63030] text-[#e63030]"
+                                        : "bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/20"
+                                        }`}
+                                >
+                                    <svg
+                                        className={`w-6 h-6 ${isLiked ? "fill-current" : "fill-none"}`}
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                        strokeWidth="2.5"
+                                    >
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         {/* Overview */}

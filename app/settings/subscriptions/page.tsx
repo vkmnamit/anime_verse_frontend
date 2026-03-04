@@ -2,24 +2,39 @@
 
 export default function SubscriptionsPage() {
     return (
-        <div className="max-w-3xl animate-in fade-in duration-500 space-y-12">
-            <header className="space-y-4">
-                <h2 className="text-xl font-black text-white tracking-widest uppercase">Subscription Matrix</h2>
-                <div className="h-[1px] w-full bg-gradient-to-r from-white/10 to-transparent" />
-            </header>
+        <div className="max-w-4xl space-y-12 animate-in fade-in duration-500">
 
-            <div className="bg-white/[0.02] border border-white/[0.05] rounded-3xl p-12 text-center space-y-6">
-                <div className="w-20 h-20 bg-white/[0.04] border border-white/[0.06] rounded-full flex items-center justify-center mx-auto text-4xl grayscale opacity-20">
-                    💎
+            {/* Subscription Info */}
+            <section>
+                <h2 className="text-[18px] font-bold text-white mb-2">Premium status</h2>
+
+                <div className="flex flex-col py-5 border-b border-white/10">
+                    <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                            <span className="text-[15px] font-medium text-white/90">Get Premium</span>
+                            <span className="text-[13px] text-white/50">Unlock exclusive features and support the platform</span>
+                        </div>
+                        <div className="flex items-center gap-4 cursor-pointer group">
+                            <span className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-[14px] font-medium rounded-full transition-colors">
+                                Subscribe
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <div className="space-y-2">
-                    <h3 className="text-lg font-black text-white/80">Premium Access</h3>
-                    <p className="text-white/30 text-sm font-medium">Coming soon: Enhancement packages for enhanced terminal output.</p>
+
+                <div className="flex items-center justify-between py-5 border-b border-white/10">
+                    <div className="flex flex-col">
+                        <span className="text-[15px] font-medium text-white/90">Gift Premium</span>
+                        <span className="text-[13px] text-white/50">Gift a subscription to another user</span>
+                    </div>
+                    <div className="flex items-center gap-4 cursor-pointer group">
+                        <svg className="w-5 h-5 text-white/40 group-hover:text-white/80 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                    </div>
                 </div>
-                <button className="px-8 py-3 bg-white/[0.04] text-white/20 text-[12px] font-black uppercase tracking-widest border border-white/[0.06] rounded-full cursor-not-allowed">
-                    Initialize Transmission
-                </button>
-            </div>
+            </section>
+
         </div>
     );
 }

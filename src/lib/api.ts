@@ -1,5 +1,11 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api/v1";
 
+let onAuthErrorCallback: (() => void) | null = null;
+
+export const setOnAuthError = (callback: () => void) => {
+    onAuthErrorCallback = callback;
+};
+
 async function fetcher(endpoint: string, options: RequestInit = {}) {
     const url = `${API_BASE}${endpoint}`;
     console.log(`[API] Fetching: ${url}`);
@@ -15,6 +21,12 @@ async function fetcher(endpoint: string, options: RequestInit = {}) {
         try {
             const errorData = await res.clone().json();
             errorMessage = errorData.error?.message || errorData.message || errorMessage;
+
+            // If there are specific validation errors in details, append them
+            const details = errorData.error?.details || errorData.details;
+            if (details && Array.isArray(details)) {
+                errorMessage = `${errorMessage}: ${details.join(", ")}`;
+            }
         } catch (e) {
             try {
                 const text = await res.text();
@@ -26,6 +38,12 @@ async function fetcher(endpoint: string, options: RequestInit = {}) {
         if (res.status === 404) {
             console.warn(`[API] 404 Not Found: ${url}`);
             return null; // Return null so the frontend can use fallbacks
+        }
+
+        // Handle 401s (expired/invalid tokens)
+        if (res.status === 401) {
+            console.warn(`[API] 401 Unauthorized: ${url}`);
+            if (onAuthErrorCallback) onAuthErrorCallback();
         }
 
         throw new Error(errorMessage);
@@ -46,10 +64,10 @@ export const api = {
         comments: (animeId: string) => fetcher(`/comments/anime/${animeId}`),
     },
     comments: {
-        create: (animeId: string, content: string, token: string, parentId?: string) =>
+        create: (animeId: string, content: string, token: string, parentId?: string, animeData?: any) =>
             fetcher("/comments", {
                 method: "POST",
-                body: JSON.stringify({ anime_id: animeId, content, parent_id: parentId }),
+                body: JSON.stringify({ anime_id: animeId, content, parent_id: parentId, anime_data: animeData }),
                 headers: { Authorization: `Bearer ${token}` }
             }),
         delete: (commentId: string, token: string) =>
@@ -59,14 +77,14 @@ export const api = {
             }),
     },
     watchlist: {
-        add: (animeId: string, status = "watching", token: string) =>
+        add: (animeId: string | number, status = "watching", token: string, animeData?: any) =>
             fetcher("/watchlist", {
                 method: "POST",
-                body: JSON.stringify({ anime_id: animeId, status }),
+                body: JSON.stringify({ anime_id: String(animeId), status, anime_data: animeData }),
                 headers: { Authorization: `Bearer ${token}` }
             }),
-        remove: (animeId: string, token: string) =>
-            fetcher(`/watchlist/${animeId}`, {
+        remove: (animeId: string | number, token: string) =>
+            fetcher(`/watchlist/${String(animeId)}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` }
             }),
@@ -74,23 +92,43 @@ export const api = {
             fetcher("/watchlist", {
                 headers: { Authorization: `Bearer ${token}` }
             }),
+        getPublicList: (username: string) => fetcher(`/watchlist/${username}`),
     },
     reactions: {
-        create: (animeId: string, type: string, token: string) =>
+        create: (animeId: string | number, type: string, token: string) =>
             fetcher("/reactions", {
                 method: "POST",
-                body: JSON.stringify({ anime_id: animeId, reaction_type: type }),
+                body: JSON.stringify({ anime_id: String(animeId), reaction_type: type }),
                 headers: { Authorization: `Bearer ${token}` }
             }),
-        getForAnime: (animeId: string) => fetcher(`/reactions/anime/${animeId}`),
+        getForAnime: (animeId: string | number) => fetcher(`/reactions/anime/${String(animeId)}`),
+        getMine: (animeId: string | number, token: string) => fetcher(`/reactions/me/${String(animeId)}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        }),
+        remove: (animeId: string | number, token: string) => fetcher(`/reactions/${String(animeId)}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` }
+        }),
     },
     battles: {
         list: (page = 1, limit = 20) => fetcher(`/battles?page=${page}&limit=${limit}`),
-        details: (id: string) => fetcher(`/battles/${id}`),
+        today: () => fetcher(`/battles/today`),
+        details: (id: string, token?: string) => fetcher(`/battles/${id}`, token ? {
+            headers: { Authorization: `Bearer ${token}` }
+        } : {}),
         vote: (id: string, vote_for: "A" | "B", token: string) =>
             fetcher(`/battles/${id}/vote`, {
                 method: "POST",
                 body: JSON.stringify({ vote_for }),
+                headers: { Authorization: `Bearer ${token}` }
+            }),
+        myVotes: (token: string) => fetcher("/battles/my-votes", {
+            headers: { Authorization: `Bearer ${token}` }
+        }),
+        advance: (day_number: number, token: string) =>
+            fetcher("/battles/advance", {
+                method: "POST",
+                body: JSON.stringify({ day_number }),
                 headers: { Authorization: `Bearer ${token}` }
             }),
     },
@@ -106,6 +144,8 @@ export const api = {
                 body: JSON.stringify(data),
                 headers: { Authorization: `Bearer ${token}` }
             }),
+        getComments: (username: string) => fetcher(`/users/${username}/comments`),
+        getVotedBattles: (username: string) => fetcher(`/users/${username}/battles`),
     },
     community: {
         posts: (params: any = {}) => {

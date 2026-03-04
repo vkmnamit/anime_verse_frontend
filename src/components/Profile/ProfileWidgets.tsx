@@ -42,6 +42,18 @@ export function BadgesWidget({ badges }: { badges: any[] }) {
     );
 }
 
+// ─── Identity Hub (Combined Widget) ──────────────────────────────────────────
+export function IdentityHub({ bio, genres }: { bio: string, genres: any[] }) {
+    if (!bio && genres.length === 0) return null;
+
+    return (
+        <div className="flex flex-col gap-12">
+            {bio && <AboutWidget text={bio} />}
+            {genres.length > 0 && <GenresWidget genres={genres} />}
+        </div>
+    );
+}
+
 // ─── Genres Widget ────────────────────────────────────────────────────────────
 export function GenresWidget({ genres }: { genres: any[] }) {
     return (
