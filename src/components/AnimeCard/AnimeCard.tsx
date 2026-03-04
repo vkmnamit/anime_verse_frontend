@@ -136,7 +136,7 @@ export default function AnimeCard({ anime, index = 0, variant = "default", hideL
             {/* Card — All content overlaid on the poster */}
             <div className="relative w-full aspect-[2/3] rounded-md overflow-hidden bg-[#12121a]">
                 <Image
-                    src={anime.posterImage}
+                    src={anime.posterImage || "/discover_fire_bg.png"}
                     alt={anime.title}
                     fill
                     sizes={isLarge ? "220px" : "185px"}

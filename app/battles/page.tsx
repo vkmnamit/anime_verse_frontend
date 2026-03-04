@@ -281,7 +281,10 @@ export default function BattlesPage() {
 
     return (
         <main className="min-h-screen bg-black relative overflow-x-hidden text-white">
-            <div className="fixed inset-0 z-0 pointer-events-none select-none hidden md:block bg-black" />
+            <div className="fixed inset-0 z-0 pointer-events-none select-none">
+                <Image src="/discover_fire_bg.png" alt="Fire Background" fill className="object-cover opacity-[0.15] mix-blend-screen" priority />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/90 to-black" />
+            </div>
 
             {loginPrompt && (
                 <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-3 rounded-none shadow-2xl"
@@ -296,21 +299,22 @@ export default function BattlesPage() {
 
             <Navbar />
 
-            <div className="hidden md:block relative w-full" style={{ height: "260px" }}>
+            <div className="relative w-full overflow-hidden" style={{ height: "340px" }}>
                 <Image
                     src="https://pub-b2620e54712941dbbdba57bdbcde64f7.r2.dev/ChatGPT%20Image%20Feb%2013%2C%202026%2C%2006_55_34%20PM.png"
                     alt="Anime Battle Week"
                     fill
-                    className="object-cover object-center opacity-20 grayscale"
+                    className="object-cover object-center opacity-60"
                     priority
                 />
-                <div className="absolute inset-0 bg-linear-to-b from-black/0 to-black" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 pt-12">
-                    <h1 className="text-5xl font-black uppercase tracking-[0.3em] leading-none mb-2">
+                <div className="absolute inset-0 bg-gradient-to-b from-[#e63030]/20 via-black/50 to-black" />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pt-16">
+                    <h1 className="text-5xl md:text-7xl font-black uppercase tracking-[0.3em] leading-none mb-3 drop-shadow-[0_0_40px_rgba(230,48,48,0.8)] text-center">
                         Verse <span className="text-[#e63030]">Battles</span>
                     </h1>
-                    <div className="h-0.5 w-12 bg-[#e63030] mb-2" />
-                    <p className="text-white/30 text-[10px] uppercase tracking-[0.5em] font-black">March 2026 Tournament</p>
+                    <div className="h-1.5 w-32 bg-[#e63030] mb-4 shadow-[0_0_30px_#e63030]" />
+                    <p className="text-white/90 text-[11px] md:text-[13px] uppercase tracking-[0.6em] font-black drop-shadow-md text-center">March 2026 Tournament</p>
                 </div>
             </div>
 
@@ -410,7 +414,7 @@ export default function BattlesPage() {
                                     Champion
                                 </div>
                                 <div className="w-36 aspect-2/3 rounded-none overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(230,48,48,0.2)]">
-                                    <img src={champion.image} alt={champion.title} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+                                    <img src={champion.image} alt={champion.title} className="w-full h-full object-cover transition-all duration-700 hover:scale-110" />
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <h3 className="text-4xl font-black text-white tracking-[0.1em] uppercase">{champion.title}</h3>

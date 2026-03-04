@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Navbar from "@/src/components/Navbar/Navbar";
 import { api } from "@/src/lib/api";
@@ -26,7 +26,23 @@ export default function DiscoverPage() {
     const [todaysBattles, setTodaysBattles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [loadingFilters, setLoadingFilters] = useState(false);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+
     const [activeSort, setActiveSort] = useState<"Popular" | "Trending" | "Top Rated" | "Recent">("Popular");
+
+    const observer = useRef<IntersectionObserver | null>(null);
+    const lastAnimeRef = useCallback((node: HTMLDivElement | null) => {
+        if (loading || loadingMore) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                setPage(prev => prev + 1);
+            }
+        });
+        if (node) observer.current.observe(node);
+    }, [loading, loadingMore, hasMore]);
     const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
     const [selectedYear, setSelectedYear] = useState<string | null>(null);
@@ -95,35 +111,66 @@ export default function DiscoverPage() {
         fetchForYou();
     }, [fetchForYou]);
 
-    // Main filtered list
-    useEffect(() => {
-        async function fetchMainList() {
-            setLoadingFilters(true);
-            try {
-                let sortValue = 'popular';
-                if (activeSort === 'Trending') sortValue = 'trending';
-                if (activeSort === 'Top Rated') sortValue = 'score';
-                if (activeSort === 'Recent') sortValue = 'recent';
+    const fetchMainList = useCallback(async (currentPage = 1, isRefresh = false) => {
+        if (currentPage === 1) setLoadingFilters(true);
+        else setLoadingMore(true);
 
-                const res = await api.anime.list({
-                    sort: sortValue,
-                    genre: selectedGenre,
-                    year: selectedYear,
-                    q: searchQuery || selectedTag || undefined,
-                    limit: 12
-                });
+        try {
+            let sortValue = 'popular';
+            if (activeSort === 'Trending') sortValue = 'trending';
+            if (activeSort === 'Top Rated') sortValue = 'score';
+            if (activeSort === 'Recent') sortValue = 'recent';
 
-                const data = Array.isArray(res) ? res : (res?.data || []);
-                setMainList(data.map(mapBackendToFrontend));
-            } catch (e) {
-                console.error(e);
-            } finally {
+            const res = await api.anime.list({
+                sort: sortValue,
+                genre: selectedGenre,
+                year: selectedYear,
+                q: searchQuery || selectedTag || undefined,
+                page: currentPage,
+                limit: 12
+            });
+
+            const data = Array.isArray(res) ? res : (res?.data || []);
+            const mappedData = data.map(mapBackendToFrontend);
+
+            if (isRefresh || currentPage === 1) {
+                setMainList(mappedData);
+            } else {
+                setMainList(prev => [...prev, ...mappedData]);
+            }
+
+            setHasMore(data.length >= 12);
+        } catch (e) {
+            console.error(e);
+        } finally {
+            if (currentPage === 1) {
                 setLoadingFilters(false);
                 setLoading(false);
+            } else {
+                setLoadingMore(false);
             }
         }
-        fetchMainList();
     }, [activeSort, selectedGenre, selectedTag, selectedYear, searchQuery]);
+
+    const handleRefresh = () => {
+        setPage(1);
+        setHasMore(true);
+        fetchMainList(1, true);
+    };
+
+    // Main filtered list reset on filter change
+    useEffect(() => {
+        setPage(1);
+        setHasMore(true);
+        fetchMainList(1, true);
+    }, [fetchMainList]);
+
+    // Main filtered list load more
+    useEffect(() => {
+        if (page > 1) {
+            fetchMainList(page);
+        }
+    }, [page, fetchMainList]);
 
     const genres = [
         { name: "Action", color: "#c4363f" },
@@ -276,59 +323,58 @@ export default function DiscoverPage() {
                 <div className="mb-20 overflow-x-auto scrollbar-hide">
                     <div className="flex items-center gap-12 min-w-max pb-10">
                         {/* Sort Toggles */}
-                        <div className="flex items-center gap-3 rounded-[24px] bg-white/[0.04] border border-white/[0.08] p-3 shrink-0 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+                        <div className="flex items-center gap-3 shrink-0">
                             {["Popular", "Trending", "Top Rated", "Recent"].map((s) => {
                                 const isActive = activeSort === s;
-                                let activeStyles = "bg-white text-black shadow-2xl scale-110";
-                                if (s === "Trending" && isActive) activeStyles = "bg-yellow-400 text-black shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-110";
-                                if (s === "Top Rated" && isActive) activeStyles = "bg-[#c4363f] text-white shadow-[0_0_30px_rgba(196,54,63,0.5)] scale-110";
+                                let activeStyles = "bg-white text-black border-white shadow-2xl scale-105 z-10";
+                                if (s === "Trending" && isActive) activeStyles = "bg-yellow-400 text-black border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.5)] scale-105 z-10";
+                                if (s === "Top Rated" && isActive) activeStyles = "bg-[#c4363f] text-white border-[#c4363f] shadow-[0_0_30px_rgba(196,54,63,0.5)] scale-105 z-10";
                                 return (
-                                    <button key={s} onClick={() => setActiveSort(s as any)} className={`px-10 py-4 rounded-xl text-[15px] font-black uppercase tracking-[0.2em] transition-all duration-400 ${isActive ? activeStyles : "text-white/30 hover:text-white/60 hover:bg-white/[0.02]"}`}>
+                                    <button key={s} onClick={() => setActiveSort(s as any)} className={`px-14 py-4 rounded-full text-[15px] font-medium transition-all duration-400 border ${isActive ? activeStyles : "bg-white/[0.03] border-white/[0.06] text-white/60 hover:bg-white/[0.1] hover:text-white hover:scale-105"}`}>
                                         {s}
                                     </button>
                                 );
                             })}
                         </div>
 
-                        <div className="w-px h-14 bg-white/[0.1] shrink-0" />
+                        <div className="w-px h-10 bg-white/[0.1] shrink-0" />
 
                         {/* Genre Pills */}
                         <div className="flex items-center gap-6">
-                            <span className="text-[12px] font-black uppercase tracking-[0.4em] text-white/20 mr-4 whitespace-nowrap">Explore Genre</span>
-                            <div className="flex items-center gap-4">
+                            <span className="text-[12px] font-semibold text-white/30 mr-2 whitespace-nowrap">Explore Genre</span>
+                            <div className="flex items-center gap-3">
                                 {genres.map((g) => (
                                     <button
                                         key={g.name}
                                         onClick={() => setSelectedGenre(selectedGenre === g.name ? null : g.name)}
-                                        className={`px-10 py-4.5 rounded-[22px] text-[14.5px] font-black uppercase tracking-widest transition-all duration-500 border ${selectedGenre === g.name
-                                            ? "text-white shadow-[0_15px_60px_rgba(0,0,0,0.5)] scale-110 z-10"
-                                            : "bg-white/[0.03] text-white/30 border-white/[0.06] hover:bg-white/[0.1] hover:text-white hover:scale-105"
+                                        className={`px-14 py-4 rounded-full text-[15px] font-medium transition-all duration-500 border ${selectedGenre === g.name
+                                            ? "text-white shadow-[0_15px_30px_rgba(0,0,0,0.5)] scale-105 z-10"
+                                            : "bg-white/[0.03] text-white/60 border-white/[0.06] hover:bg-white/[0.1] hover:text-white hover:scale-105"
                                             }`}
-                                        style={selectedGenre === g.name ? { backgroundColor: g.color, borderColor: g.color, boxShadow: `0 20px 50px ${g.color}60` } : {}}
+                                        style={selectedGenre === g.name ? { backgroundColor: g.color, borderColor: g.color, boxShadow: `0 10px 40px ${g.color}60` } : {}}
                                     >
                                         {g.name}
-                                        {/* highlight genres the user likes */}
                                         {topGenres.includes(g.name) && (
-                                            <span className="ml-2 text-[8px] opacity-60">★</span>
+                                            <span className="ml-2 text-[10px] opacity-60">★</span>
                                         )}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="w-px h-14 bg-white/[0.1] shrink-0" />
+                        <div className="w-px h-10 bg-white/[0.1] shrink-0" />
 
                         {/* Tag Pills */}
                         <div className="flex items-center gap-6">
-                            <span className="text-[12px] font-black uppercase tracking-[0.4em] text-white/20 mr-4 whitespace-nowrap">Core Tags</span>
-                            <div className="flex items-center gap-4">
+                            <span className="text-[12px] font-semibold text-white/30 mr-2 whitespace-nowrap">Core Tags</span>
+                            <div className="flex items-center gap-3">
                                 {tags.map((t) => (
                                     <button
                                         key={t}
                                         onClick={() => setSelectedTag(selectedTag === t ? null : t)}
-                                        className={`px-8 py-4.5 rounded-[22px] text-[14px] font-black uppercase tracking-widest transition-all duration-300 border ${selectedTag === t
-                                            ? "bg-white text-black border-white shadow-2xl scale-110"
-                                            : "bg-white/[0.03] text-white/30 border-white/[0.06] hover:bg-white/[0.08] hover:text-white hover:scale-105"
+                                        className={`px-14 py-4 rounded-full text-[15px] font-medium transition-all duration-300 border ${selectedTag === t
+                                            ? "bg-white text-black border-white shadow-2xl scale-105 z-10"
+                                            : "bg-white/[0.03] text-white/60 border-white/[0.06] hover:bg-white/[0.1] hover:text-white hover:scale-105"
                                             }`}
                                     >
                                         {t}
@@ -337,18 +383,18 @@ export default function DiscoverPage() {
                             </div>
                         </div>
 
-                        <div className="w-px h-14 bg-white/[0.1] shrink-0" />
+                        <div className="w-px h-10 bg-white/[0.1] shrink-0" />
 
                         {/* Year Pills */}
                         <div className="flex items-center gap-6">
-                            <span className="text-[12px] font-black uppercase tracking-[0.4em] text-white/20 mr-4 whitespace-nowrap">Year</span>
+                            <span className="text-[12px] font-semibold text-white/30 mr-2 whitespace-nowrap">Year</span>
                             {["2025", "2024", "2023", "2022"].map((y) => (
                                 <button
                                     key={y}
                                     onClick={() => setSelectedYear(selectedYear === y ? null : y)}
-                                    className={`px-8 py-4.5 rounded-[22px] text-[15px] font-black uppercase tracking-widest transition-all duration-300 border ${selectedYear === y
-                                        ? "bg-yellow-400 text-black border-yellow-400 shadow-[0_15px_45px_rgba(250,204,21,0.5)] scale-115"
-                                        : "bg-white/[0.03] text-white/30 border-white/[0.06] hover:bg-white/[0.08] hover:text-white hover:scale-105"
+                                    className={`px-14 py-4 rounded-full text-[15px] font-medium transition-all duration-300 border ${selectedYear === y
+                                        ? "bg-yellow-400 text-black border-yellow-400 shadow-[0_10px_30px_rgba(250,204,21,0.5)] scale-105 z-10"
+                                        : "bg-white/[0.03] text-white/60 border-white/[0.06] hover:bg-white/[0.1] hover:text-white hover:scale-105"
                                         }`}
                                 >
                                     {y}
@@ -405,15 +451,27 @@ export default function DiscoverPage() {
                         {/* MAIN LIST */}
                         <section>
                             <div className="flex items-center justify-between mb-10">
-                                <h2 className="text-[28px] font-black uppercase italic tracking-tighter">
+                                <h2 className="text-[28px] font-black uppercase italic tracking-tighter flex items-center gap-4">
                                     {selectedGenre || activeSort} Anime
-                                    {loadingFilters && <span className="ml-4 text-[10px] font-black text-[#c4363f] animate-pulse">Scanning DB...</span>}
+                                    {loadingFilters && <span className="text-[10px] font-black text-[#c4363f] animate-pulse">Scanning DB...</span>}
                                 </h2>
-                                {selectedGenre && (
-                                    <button onClick={() => setSelectedGenre(null)} className="text-[10px] font-black uppercase tracking-widest text-white/25 hover:text-white/60 transition-all">
-                                        Clear ✕
+                                <div className="flex items-center gap-4">
+                                    {selectedGenre && (
+                                        <button onClick={() => setSelectedGenre(null)} className="text-[10px] font-black uppercase tracking-widest text-white/25 hover:text-white/60 transition-all">
+                                            Clear ✕
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={handleRefresh}
+                                        disabled={loadingFilters}
+                                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white/70 hover:text-white transition-all text-xs font-semibold disabled:opacity-50"
+                                    >
+                                        <svg className={`w-3.5 h-3.5 ${loadingFilters ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582M20 20v-5h-.581M4.582 9A8 8 0 0119.419 15M19.419 15A8 8 0 014.582 9" />
+                                        </svg>
+                                        Refresh list
                                     </button>
-                                )}
+                                </div>
                             </div>
 
                             {loading ? (
@@ -429,18 +487,29 @@ export default function DiscoverPage() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-6">
-                                    {mainList.map((anime) => (
-                                        <div key={anime.id} onClick={() => openModal(anime)} className="group relative aspect-[3/4.2] rounded-2xl overflow-hidden cursor-pointer border border-white/[0.06] transition-all duration-300 hover:scale-[1.05] hover:border-white/20">
-                                            <Image src={anime.posterImage} alt={anime.title} fill className="object-cover transition-all duration-500 group-hover:brightness-125" />
+                                    {mainList.map((anime, idx) => (
+                                        <div
+                                            key={`${anime.id}-${idx}`}
+                                            ref={mainList.length === idx + 1 ? lastAnimeRef : null}
+                                            onClick={() => openModal(anime)}
+                                            className="group relative aspect-[3/4.2] rounded-2xl overflow-hidden cursor-pointer border border-white/[0.06] transition-all duration-300 hover:scale-[1.05] hover:border-white/20"
+                                        >
+                                            <Image src={anime.posterImage || "/discover_fire_bg.png"} alt={anime.title} fill className="object-cover transition-all duration-500 group-hover:brightness-125" />
                                             <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black via-black/40 to-transparent">
                                                 <h3 className="text-[13px] font-black italic uppercase leading-tight line-clamp-1">{anime.title}</h3>
                                                 <div className="flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <span className="text-[10px] font-bold text-[#c4363f]">⭐ {(anime.rating || 0 / 10).toFixed(1)}</span>
+                                                    <span className="text-[10px] font-bold text-[#c4363f]">⭐ {((anime.rating || 0) / 10).toFixed(1)}</span>
                                                     <span className="text-[10px] font-medium text-white/40">{anime.subtype}</span>
                                                 </div>
                                             </div>
                                         </div>
                                     ))}
+                                </div>
+                            )}
+
+                            {loadingMore && (
+                                <div className="flex justify-center py-10 w-full mt-4">
+                                    <div className="w-8 h-8 border-2 border-[#c4363f]/30 border-t-[#c4363f] rounded-full animate-spin"></div>
                                 </div>
                             )}
                         </section>
@@ -459,12 +528,12 @@ export default function DiscoverPage() {
                                             onClick={() => openModal(anime)}
                                             className="group relative w-44 shrink-0 aspect-[3/4.5] rounded-3xl overflow-hidden cursor-pointer border border-white/5 hover:border-white/20 transition-all duration-300 hover:scale-105"
                                         >
-                                            <Image src={anime.posterImage} alt={anime.title} fill className="object-cover transition-all duration-500 group-hover:brightness-110" />
+                                            <Image src={anime.posterImage || "/discover_fire_bg.png"} alt={anime.title} fill className="object-cover transition-all duration-500 group-hover:brightness-110" />
                                             <div className="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent" />
                                             <div className="absolute inset-x-0 bottom-0 p-4">
                                                 <h3 className="text-[12px] font-black italic uppercase leading-tight line-clamp-2">{anime.title}</h3>
                                                 <div className="flex items-center gap-2 mt-1.5">
-                                                    <span className="text-[10px] font-bold text-yellow-400">★ {(anime.rating || 0).toFixed(1)}</span>
+                                                    <span className="text-[10px] font-bold text-yellow-400">★ {((anime.rating || 0) / 10).toFixed(1)}</span>
                                                     <span className="text-[9px] font-medium text-white/30 uppercase">{anime.subtype}</span>
                                                 </div>
                                             </div>
@@ -482,7 +551,7 @@ export default function DiscoverPage() {
                                     {upcoming.map(anime => (
                                         <div key={anime.id} onClick={() => openModal(anime)} className="flex gap-4 p-3 rounded-2xl hover:bg-white/3 transition-all cursor-pointer group">
                                             <div className="relative w-32 h-20 rounded-xl overflow-hidden border border-white/8 shrink-0">
-                                                <Image src={anime.coverImage || anime.posterImage} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500" alt={anime.title} />
+                                                <Image src={anime.coverImage || anime.posterImage || "/discover_fire_bg.png"} fill className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500" alt={anime.title} />
                                             </div>
                                             <div className="flex flex-col justify-center">
                                                 <h4 className="text-sm font-black italic uppercase line-clamp-1">{anime.title}</h4>
@@ -564,15 +633,15 @@ export default function DiscoverPage() {
                                             </div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="relative aspect-[3/4.2] rounded-2xl overflow-hidden border border-white/5 cursor-pointer group/item hover:border-white/20 transition-all">
-                                                    <Image src={battle.animeA.image || "https://placehold.co/600x400/000000/FFFFFF/png?text=Side+A"} fill className="object-cover grayscale group-hover/item:grayscale-0 transition-all duration-700" alt={battle.animeA.name} />
-                                                    <div className="absolute inset-0 bg-black/40" />
+                                                    <Image src={battle.animeA.image || "https://placehold.co/600x400/000000/FFFFFF/png?text=Side+A"} fill className="object-cover transition-transform duration-700 group-hover/item:scale-110" alt={battle.animeA.name} />
+                                                    <div className="absolute inset-0 bg-black/40 group-hover/item:bg-black/10 transition-colors duration-500" />
                                                     <div className="absolute bottom-3 inset-x-3">
                                                         <p className="text-[9px] font-black uppercase italic leading-tight text-white line-clamp-1">{battle.animeA.name}</p>
                                                     </div>
                                                 </div>
                                                 <div className="relative aspect-[3/4.2] rounded-2xl overflow-hidden border border-white/5 cursor-pointer group/item hover:border-white/20 transition-all">
-                                                    <Image src={battle.animeB.image || "https://placehold.co/600x400/000000/FFFFFF/png?text=Side+B"} fill className="object-cover grayscale group-hover/item:grayscale-0 transition-all duration-700" alt={battle.animeB.name} />
-                                                    <div className="absolute inset-0 bg-black/40" />
+                                                    <Image src={battle.animeB.image || "https://placehold.co/600x400/000000/FFFFFF/png?text=Side+B"} fill className="object-cover transition-transform duration-700 group-hover/item:scale-110" alt={battle.animeB.name} />
+                                                    <div className="absolute inset-0 bg-black/40 group-hover/item:bg-black/10 transition-colors duration-500" />
                                                     <div className="absolute bottom-3 inset-x-3 text-right">
                                                         <p className="text-[9px] font-black uppercase italic leading-tight text-white line-clamp-1">{battle.animeB.name}</p>
                                                     </div>

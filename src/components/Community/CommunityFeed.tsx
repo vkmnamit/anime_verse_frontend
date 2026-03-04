@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearch } from "@/src/context/SearchContext";
 import { useAuth } from "@/src/context/AuthContext";
 import { api } from "@/src/lib/api";
@@ -16,6 +16,21 @@ export default function CommunityFeed({
 }) {
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    const observer = useRef<IntersectionObserver | null>(null);
+    const lastPostRef = useCallback((node: HTMLDivElement | null) => {
+        if (loading || loadingMore) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                setPage(prev => prev + 1);
+            }
+        });
+        if (node) observer.current.observe(node);
+    }, [loading, loadingMore, hasMore]);
 
     const [revealedPosts, setRevealedPosts] = useState<Record<number, boolean>>({});
     const [likedPosts, setLikedPosts] = useState<number[]>([]);
@@ -35,22 +50,53 @@ export default function CommunityFeed({
         return false;
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true);
-            try {
-                const res = await api.community.posts(communitySlug ? { slug: communitySlug } : {});
-                const data = Array.isArray(res) ? res : (res.data || res.posts || []);
-                setPosts(data);
-            } catch (err) {
-                console.error("Failed to fetch posts", err);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const fetchPosts = async (currentPage = 1, isRefresh = false) => {
+        if (currentPage === 1) setLoading(true);
+        else setLoadingMore(true);
 
-        fetchData();
+        try {
+            const params: any = { page: currentPage, limit: 12 };
+            if (communitySlug) params.slug = communitySlug;
+
+            const res = await api.community.posts(params);
+            const data = Array.isArray(res) ? res : (res.data || res.posts || []);
+
+            if (isRefresh || currentPage === 1) {
+                setPosts(data);
+            } else {
+                setPosts(prev => [...prev, ...data]);
+            }
+
+            if (data.length < 12) {
+                setHasMore(false);
+            } else {
+                setHasMore(true);
+            }
+        } catch (err) {
+            console.error("Failed to fetch posts", err);
+        } finally {
+            if (currentPage === 1) setLoading(false);
+            else setLoadingMore(false);
+        }
+    };
+
+    const handleRefresh = () => {
+        setPage(1);
+        setHasMore(true);
+        fetchPosts(1, true);
+    };
+
+    useEffect(() => {
+        setPage(1);
+        setHasMore(true);
+        fetchPosts(1, true);
     }, [communitySlug]);
+
+    useEffect(() => {
+        if (page > 1) {
+            fetchPosts(page);
+        }
+    }, [page]);
 
     useEffect(() => {
         if (token) {
@@ -159,6 +205,21 @@ export default function CommunityFeed({
 
     return (
         <div className="flex flex-col w-full relative font-sans">
+
+            {/* Refresh Button */}
+            <div className="flex justify-end mb-4 px-2">
+                <button
+                    onClick={handleRefresh}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white/70 hover:text-white transition-all text-sm font-semibold disabled:opacity-50"
+                >
+                    <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582M20 20v-5h-.581M4.582 9A8 8 0 0119.419 15M19.419 15A8 8 0 014.582 9" />
+                    </svg>
+                    Refresh Feed
+                </button>
+            </div>
+
             <div className="flex flex-col gap-3 w-full">
                 {loading ? (
                     <div className="flex flex-col gap-4 w-full">
@@ -169,8 +230,9 @@ export default function CommunityFeed({
                 ) : posts.length === 0 ? (
                     <div className="py-20 text-center text-white/30 italic text-[14px] font-medium w-full">No transmissions today</div>
                 ) : (
-                    posts.map((post: any) => (
+                    posts.map((post: any, index: number) => (
                         <div
+                            ref={posts.length === index + 1 ? lastPostRef : null}
                             key={post.id}
                             className="rounded-2xl overflow-hidden transition-all w-full group hover:border-white/[0.12]"
                             style={{
@@ -331,6 +393,12 @@ export default function CommunityFeed({
                     ))
                 )
                 }
+
+                {loadingMore && (
+                    <div className="flex justify-center py-6 w-full">
+                        <div className="w-6 h-6 border-2 border-white/20 border-t-white/80 rounded-full animate-spin"></div>
+                    </div>
+                )}
             </div >
         </div >
     );
