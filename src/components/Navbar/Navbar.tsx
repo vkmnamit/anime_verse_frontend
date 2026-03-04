@@ -138,11 +138,22 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
                             </button>
                         </div>
 
-                        {/* Sign Up — visible on mobile + desktop when logged out */}
+                        {/* Sign In / Sign Up — logged out state */}
                         {!isLoggedIn && (
-                            <Link href="/auth" className="px-7 lg:px-10 py-2.5 text-[12px] lg:text-[15px] font-bold rounded-sm text-white bg-[#e63030] hover:bg-[#ff4545] transition-all whitespace-nowrap">
-                                Sign up
-                            </Link>
+                            <div className="flex items-center gap-2">
+                                <Link
+                                    href="/auth"
+                                    className="hidden sm:flex items-center px-4 py-2 text-[13px] font-bold text-white/70 hover:text-white transition-colors whitespace-nowrap"
+                                >
+                                    Sign In
+                                </Link>
+                                <Link
+                                    href="/auth?mode=signup"
+                                    className="px-4 sm:px-6 py-2 text-[12px] sm:text-[13px] font-bold rounded-lg text-white bg-[#e63030] hover:bg-[#ff4545] transition-all whitespace-nowrap"
+                                >
+                                    Sign Up
+                                </Link>
+                            </div>
                         )}
 
                         {/* User Profile */}
