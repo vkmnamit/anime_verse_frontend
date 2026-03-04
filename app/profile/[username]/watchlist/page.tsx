@@ -7,10 +7,12 @@ import { useAuth } from "@/src/context/AuthContext";
 import AnimeCard from "@/src/components/AnimeCard/AnimeCard";
 import { getAnimeById } from "@/src/lib/kitsu";
 
+import Carousel from "@/src/components/Carousel/Carousel";
+
 export default function WatchlistPage() {
     const params = useParams();
     const profileUsername = params.username as string;
-    const { token, user: currentUser } = useAuth();
+    const { token } = useAuth();
 
     const [watchlist, setWatchlist] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -19,19 +21,15 @@ export default function WatchlistPage() {
         const fetchWatchlist = async () => {
             setLoading(true);
             try {
-                // Try fetching public watchlist first
                 const res = await api.watchlist.getPublicList(profileUsername);
                 const items = res?.data || res || [];
 
                 if (items.length > 0) {
-                    // For each item, we need to ensure we have the kitsu data
-                    // The backend might already have some in .anime, but let's be safe
                     const fullDetails = await Promise.all(
                         items.map(async (item: any) => {
-                            // If backend has anime data synced
+                            let animeData = null;
                             if (item.anime && item.anime.id) {
-                                // Transform backend anime to kitsu-like format for AnimeCard
-                                return {
+                                animeData = {
                                     id: item.anime.id,
                                     title: item.anime.title,
                                     posterImage: item.anime.cover_image,
@@ -40,13 +38,14 @@ export default function WatchlistPage() {
                                     status: item.anime.status,
                                     categories: item.anime.genres || []
                                 };
+                            } else {
+                                try {
+                                    animeData = await getAnimeById(item.anime_id);
+                                } catch {
+                                    animeData = null;
+                                }
                             }
-                            // Fallback to Kitsu if needed
-                            try {
-                                return await getAnimeById(item.anime_id);
-                            } catch {
-                                return null;
-                            }
+                            return animeData ? { ...animeData, watchlistStatus: item.status } : null;
                         })
                     );
                     setWatchlist(fullDetails.filter(Boolean));
@@ -62,11 +61,27 @@ export default function WatchlistPage() {
         fetchWatchlist();
     }, [profileUsername]);
 
+    // Grouping logic
+    const sections = [
+        { id: 'watching', title: 'Currently Syncing' },
+        { id: 'planned', title: 'Planned for Future' },
+        { id: 'completed', title: 'Completed Archives' },
+        { id: 'on_hold', title: 'On Hold' },
+        { id: 'dropped', title: 'Declassified / Dropped' }
+    ];
+
     if (loading) {
         return (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 animate-pulse">
-                {[...Array(6)].map((_, i) => (
-                    <div key={i} className="aspect-[2/3] bg-white/[0.02] border border-white/5 rounded-none" />
+            <div className="space-y-12 animate-pulse pl-6">
+                {[...Array(2)].map((_, i) => (
+                    <div key={i} className="space-y-4">
+                        <div className="h-6 bg-white/5 w-48 rounded-sm" />
+                        <div className="flex gap-4 overflow-hidden">
+                            {[...Array(6)].map((_, j) => (
+                                <div key={j} className="w-[150px] lg:w-[185px] aspect-[2/3] bg-white/[0.02] border border-white/5 rounded-sm" />
+                            ))}
+                        </div>
+                    </div>
                 ))}
             </div>
         );
@@ -85,22 +100,26 @@ export default function WatchlistPage() {
     }
 
     return (
-        <div className="animate-in fade-in duration-700">
-            <div className="flex items-center justify-between mb-12 pl-6 border-l-[3px] border-[#e63030]">
-                <div className="flex flex-col gap-1.5">
-                    <h2 className="text-[11px] font-black text-white uppercase tracking-[0.4em]">Active Watchlist</h2>
-                    <p className="text-white/20 text-[9px] font-black uppercase tracking-[0.4em] mt-1">{watchlist.length} Signals Decrypted</p>
-                </div>
-                <div className="h-[1px] flex-1 ml-16 bg-gradient-to-r from-white/10 to-transparent" />
+        <div className="animate-in fade-in duration-700 -mx-8 sm:-mx-12 lg:-mx-[60px]">
+            <div className="space-y-2 mb-10 pl-8 sm:pl-12 lg:pl-[60px]">
+                <h2 className="text-[11px] font-black text-white uppercase tracking-[0.4em]">Personal Repository</h2>
+                <div className="h-[1px] w-24 bg-[#e63030]" />
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
-                {watchlist.map((anime, idx) => (
-                    <div key={anime.id} className="transition-transform duration-500 hover:scale-[1.03]">
-                        <AnimeCard anime={anime} index={idx} />
-                    </div>
-                ))}
-            </div>
+            {sections.map(section => {
+                const items = watchlist.filter(item => item.watchlistStatus === section.id);
+                if (items.length === 0) return null;
+
+                return (
+                    <Carousel key={section.id} title={section.title}>
+                        {items.map((anime, idx) => (
+                            <div key={anime.id} className="transition-transform duration-300 hover:scale-[1.02]">
+                                <AnimeCard anime={anime} index={idx} hideLike={true} />
+                            </div>
+                        ))}
+                    </Carousel>
+                );
+            })}
         </div>
     );
 }

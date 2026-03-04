@@ -23,7 +23,7 @@ export default function CommunityFeed({
     const [copiedPost, setCopiedPost] = useState<number | null>(null);
     const [joinedCommunities, setJoinedCommunities] = useState<Set<string>>(new Set());
     const { searchQuery } = useSearch();
-    const { token } = useAuth();
+    const { token, user } = useAuth();
     const router = useRouter();
 
     const requireAuth = (e?: React.MouseEvent<HTMLElement>) => {
@@ -50,7 +50,9 @@ export default function CommunityFeed({
         };
 
         fetchData();
+    }, [communitySlug]);
 
+    useEffect(() => {
         if (token) {
             api.community.getLikedPosts(token)
                 .then(res => {
@@ -58,8 +60,15 @@ export default function CommunityFeed({
                     setLikedPosts(data);
                 })
                 .catch(err => console.error("Failed to fetch liked posts", err));
+
+            api.community.getJoined(token)
+                .then(res => {
+                    const data = Array.isArray(res) ? res : (res.data || []);
+                    setJoinedCommunities(new Set(data));
+                })
+                .catch(err => console.error("Failed to fetch joined communities", err));
         }
-    }, [token, communitySlug]);
+    }, [token]);
 
     const handleLike = async (postId: number) => {
         if (requireAuth() || !token) return;
@@ -73,11 +82,20 @@ export default function CommunityFeed({
 
         try {
             await api.community.toggleLike(postId, token);
+            // After successful toggle, we could adjust state, but we've already done it optimistically
+            // To be safe, we only handle the failure (revert) in the catch block
         } catch (err) {
             console.error("Failed to toggle like", err);
+            // Revert state on failure
             setLikedPosts(prev =>
                 isLiked ? [...prev, postId] : prev.filter(id => id !== postId)
             );
+            setPosts(prev => prev.map(p => {
+                if (p.id === postId) {
+                    return { ...p, votes: (p.votes || 0) + (isLiked ? 1 : -1) };
+                }
+                return p;
+            }));
         }
     };
 
@@ -86,6 +104,50 @@ export default function CommunityFeed({
         navigator.clipboard.writeText(url);
         setCopiedPost(postId);
         setTimeout(() => setCopiedPost(null), 2000);
+
+        // Optimistic share count update
+        setPosts(prev => prev.map(p => {
+            if (p.id === postId) {
+                return { ...p, share_count: (p.share_count || 0) + 1 };
+            }
+            return p;
+        }));
+
+        // Track share in the database
+        api.community.trackShare(postId).catch(err => {
+            console.error("Failed to track share", err);
+            // Revert if it's really important, but shares are usually low stakes
+        });
+    };
+
+    const handleJoin = async (slug: string) => {
+        if (!token) {
+            router.push('/auth');
+            return;
+        }
+
+        const isJoined = joinedCommunities.has(slug);
+
+        // Optimistic update
+        setJoinedCommunities(prev => {
+            const next = new Set(prev);
+            if (isJoined) next.delete(slug);
+            else next.add(slug);
+            return next;
+        });
+
+        try {
+            await api.community.toggleJoin(slug, token);
+        } catch (err) {
+            console.error("Failed to toggle join", err);
+            // Revert state
+            setJoinedCommunities(prev => {
+                const next = new Set(prev);
+                if (isJoined) next.add(slug);
+                else next.delete(slug);
+                return next;
+            });
+        }
     };
 
     const toggleComments = (postId: number) => {
@@ -141,19 +203,14 @@ export default function CommunityFeed({
                                         onClick={(e) => {
                                             if (requireAuth(e)) return;
                                             const slug = post.community_slug || (post.community_name || post.community || '').toLowerCase().replace(/\s+/g, '-');
-                                            setJoinedCommunities(prev => {
-                                                const next = new Set(prev);
-                                                next.has(slug) ? next.delete(slug) : next.add(slug);
-                                                return next;
-                                            });
+                                            handleJoin(slug);
                                         }}
-                                        className="h-6 w-16 flex items-center justify-center rounded-full text-[11px] font-semibold transition-all active:scale-95"
-                                        style={joinedCommunities.has(post.community_slug || (post.community_name || post.community || '').toLowerCase().replace(/\s+/g, '-'))
-                                            ? { background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.13)", color: "rgba(255,255,255,0.50)" }
-                                            : { border: "1px solid rgba(255,255,255,0.20)", color: "rgba(255,255,255,0.45)" }
-                                        }
+                                        className={`h-8 px-4 rounded-full text-[12px] font-bold transition-all border ${joinedCommunities.has(post.community_slug || (post.community_name || post.community || '').toLowerCase().replace(/\s+/g, '-'))
+                                            ? "border-white/20 text-white/60 hover:border-white/40 hover:text-white"
+                                            : "bg-white text-black border-white hover:bg-white/90 shadow-lg shadow-white/5 active:scale-95"
+                                            }`}
                                     >
-                                        {joinedCommunities.has(post.community_slug || (post.community_name || post.community || '').toLowerCase().replace(/\s+/g, '-')) ? '✓ Joined' : '+ Join'}
+                                        {joinedCommunities.has(post.community_slug || (post.community_name || post.community || '').toLowerCase().replace(/\s+/g, '-')) ? "Joined" : "Join"}
                                     </button>
                                 </div>
                             </div>
@@ -213,7 +270,7 @@ export default function CommunityFeed({
                                     </button>
                                     <span className="text-[13px] font-bold select-none min-w-[20px] text-center"
                                         style={{ color: likedPosts.includes(post.id) ? "#FF4500" : "rgba(255,255,255,0.8)" }}>
-                                        {post.votes + (likedPosts.includes(post.id) ? 1 : 0)}
+                                        {post.votes || 0}
                                     </span>
                                     <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/[0.08] transition-colors text-white/60 hover:text-[#7193ff]">
                                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20 9l-8 8-8-8" /></svg>
@@ -236,10 +293,19 @@ export default function CommunityFeed({
                                 {/* Share */}
                                 <button
                                     onClick={() => handleShare(post.id)}
-                                    className="flex items-center gap-2 h-9 px-3.5 rounded-full transition-colors text-[13px] font-bold bg-white/[0.06] hover:bg-white/[0.08] text-white/80"
+                                    className={`flex items-center gap-2 h-9 px-3.5 rounded-full transition-colors text-[13px] font-bold ${copiedPost === post.id ? 'bg-green-500/20 text-green-400' : 'bg-white/[0.06] hover:bg-white/[0.08] text-white/80'}`}
                                 >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-                                    Share
+                                    {copiedPost === post.id ? (
+                                        <>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                            Copied!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+                                            {post.share_count || 0 > 0 ? (post.share_count >= 1000 ? (post.share_count / 1000).toFixed(1) + 'k' : post.share_count) : 'Share'}
+                                        </>
+                                    )}
                                 </button>
                             </div>
 
@@ -250,6 +316,14 @@ export default function CommunityFeed({
                                         postId={post.id}
                                         isOpen={openComments[post.id]}
                                         onClose={() => toggleComments(post.id)}
+                                        onCommentAdded={() => {
+                                            setPosts(prev => prev.map(p => {
+                                                if (p.id === post.id) {
+                                                    return { ...p, comment_count: (p.comment_count || 0) + 1 };
+                                                }
+                                                return p;
+                                            }));
+                                        }}
                                     />
                                 </div>
                             )}

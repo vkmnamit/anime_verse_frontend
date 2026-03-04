@@ -229,23 +229,6 @@ export default function AnimeDetailModal() {
                                     </svg>
                                     {isInWatchlist ? "In My List" : "Add to List"}
                                 </button>
-
-                                <button
-                                    onClick={handleLike}
-                                    className={`w-[45px] h-[45px] rounded-sm flex items-center justify-center transition-all active:scale-90 border ${isLiked
-                                        ? "bg-[#e63030]/10 border-[#e63030] text-[#e63030]"
-                                        : "bg-white/5 border-white/10 text-white/40 hover:text-white hover:border-white/20"
-                                        }`}
-                                >
-                                    <svg
-                                        className={`w-6 h-6 ${isLiked ? "fill-current" : "fill-none"}`}
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        strokeWidth="2.5"
-                                    >
-                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                                    </svg>
-                                </button>
                             </div>
                         </div>
 

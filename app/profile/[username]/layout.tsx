@@ -15,31 +15,38 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     const profileUsername = params.username as string;
 
     const [profileData, setProfileData] = useState<any>(null);
+    const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     // isOwnProfile moved down
 
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchAll = async () => {
             setLoading(true);
             try {
-                const res = await api.user.getProfile(profileUsername);
-                if (res) {
-                    setProfileData(res.data || res);
-                }
+                const [pRes, sRes] = await Promise.all([
+                    api.user.getProfile(profileUsername),
+                    api.user.getStats(profileUsername)
+                ]);
+                if (pRes) setProfileData(pRes.data || pRes);
+                if (sRes) setStats(sRes.data || sRes);
             } catch (err) {
-                console.error("Failed to fetch profile", err);
+                console.error("Failed to fetch profile/stats", err);
             }
             setLoading(false);
         };
-        fetchProfile();
+        fetchAll();
     }, [profileUsername]);
 
     const handleProfileUpdated = async () => {
         await refreshUser();
         try {
-            const res = await api.user.getProfile(currentUser?.username || profileUsername);
-            const data = res.data || res;
+            const [pRes, sRes] = await Promise.all([
+                api.user.getProfile(currentUser?.username || profileUsername),
+                api.user.getStats(currentUser?.username || profileUsername)
+            ]);
+            const data = pRes.data || pRes;
             setProfileData(data);
+            setStats(sRes.data || sRes);
             if (data.username && data.username !== profileUsername) {
                 router.replace(`/profile/${data.username}`);
             }
@@ -60,8 +67,9 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 
     const user = {
         username: safeUsername,
-        avatar: profileData?.avatar_url || (isOwnProfile && currentUser?.avatar_url) ? (profileData?.avatar_url || currentUser?.avatar_url || "/default-avatar.png") : "/default-avatar.png",
-        bio: profileData?.bio || (isOwnProfile ? currentUser?.bio : "") || "",
+        avatar: profileData?.avatar_url || (isOwnProfile ? currentUser?.avatar_url : "") || "/default-avatar.png",
+        banner: profileData?.banner_url || (isOwnProfile ? currentUser?.banner_url : "") || null,
+        bio: profileData?.bio || (isOwnProfile ? currentUser?.bio : "") || "No combat record found.",
         tags: profileData?.genres || (isOwnProfile ? currentUser?.genres : []) || [],
         isVip: true,
     };
@@ -76,7 +84,12 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                     </div>
                 ) : (
                     <>
-                        <ProfileHero user={user} isOwnProfile={isOwnProfile} onProfileUpdated={handleProfileUpdated} />
+                        <ProfileHero
+                            user={user}
+                            stats={stats}
+                            isOwnProfile={isOwnProfile}
+                            onProfileUpdated={handleProfileUpdated}
+                        />
                         <ProfileTabs username={profileUsername} />
                         {children}
                     </>

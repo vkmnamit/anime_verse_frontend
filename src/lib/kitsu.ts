@@ -69,6 +69,7 @@ export interface AnimeCard {
     userCount: number;
     categories: string[];
     ageRating: string | null;
+    startDate: string | null;
 }
 
 /* ---- Transform raw Kitsu data into clean card ---- */
@@ -91,6 +92,7 @@ function transformAnime(anime: KitsuAnime, categories?: string[]): AnimeCard {
         userCount: a.userCount,
         categories: categories || [],
         ageRating: a.ageRating,
+        startDate: a.startDate,
     };
 }
 

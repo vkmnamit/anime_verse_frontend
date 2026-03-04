@@ -9,6 +9,7 @@ interface User {
     email: string;
     username: string;
     avatar_url?: string;
+    banner_url?: string;
     bio?: string;
     genres?: string[];
     twitter?: string;

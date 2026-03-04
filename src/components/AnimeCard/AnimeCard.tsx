@@ -23,9 +23,10 @@ interface Props {
     anime: AnimeCardType;
     index?: number;
     variant?: "default" | "large";
+    hideLike?: boolean;
 }
 
-export default function AnimeCard({ anime, index = 0, variant = "default" }: Props) {
+export default function AnimeCard({ anime, index = 0, variant = "default", hideLike = false }: Props) {
     const tag = getReactionBadge(anime, index);
     const { openModal } = useAnimeModal();
     const { token, user } = useAuth();
@@ -145,20 +146,22 @@ export default function AnimeCard({ anime, index = 0, variant = "default" }: Pro
                 {/* Action Buttons — Top Right (Stacked) */}
                 <div className="absolute top-2 right-2 z-30 flex flex-col gap-1.5">
                     {/* Like Heart */}
-                    <button
-                        onClick={handleLike}
-                        className="w-7 h-7 flex items-center justify-center rounded-sm bg-black/40 backdrop-blur-md hover:bg-black/60 transition-all active:scale-90 border border-white/5"
-                        aria-label={liked ? "Unlike" : "Like"}
-                    >
-                        <svg
-                            className={`w-3.5 h-3.5 transition-all duration-300 ${liked ? "fill-[#e63030] text-[#e63030] scale-110" : "fill-none text-white/80"}`}
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
+                    {!hideLike && (
+                        <button
+                            onClick={handleLike}
+                            className="w-7 h-7 flex items-center justify-center rounded-sm bg-black/40 backdrop-blur-md hover:bg-black/60 transition-all active:scale-90 border border-white/5"
+                            aria-label={liked ? "Unlike" : "Like"}
                         >
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                        </svg>
-                    </button>
+                            <svg
+                                className={`w-3.5 h-3.5 transition-all duration-300 ${liked ? "fill-[#e63030] text-[#e63030] scale-110" : "fill-none text-white/80"}`}
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                            >
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            </svg>
+                        </button>
+                    )}
 
                     {/* Wishlist Bookmark */}
                     <button
