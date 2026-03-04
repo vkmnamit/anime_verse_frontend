@@ -282,9 +282,9 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
                                     )}
                                 </>
                             ) : (
-                                <Link href="/auth" className="flex items-center gap-2 text-white/50 hover:text-white text-[14px] font-bold transition-all">
-                                    Sign In
-                                </Link>
+                                <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-full overflow-hidden border-2 border-white/10 flex items-center justify-center text-white/40 text-sm font-bold">
+                                    ?
+                                </div>
                             )}
                         </div>
 
