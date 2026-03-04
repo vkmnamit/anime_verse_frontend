@@ -90,6 +90,12 @@ export const api = {
                 body: JSON.stringify({ anime_id: String(animeId), status, anime_data: animeData }),
                 headers: { Authorization: `Bearer ${token}` }
             }),
+        update: (animeId: string | number, data: { status?: string; episodes_watched?: number; score?: number | null; notes?: string }, token: string) =>
+            fetcher(`/watchlist/${String(animeId)}`, {
+                method: "PATCH",
+                body: JSON.stringify(data),
+                headers: { Authorization: `Bearer ${token}` }
+            }),
         remove: (animeId: string | number, token: string) =>
             fetcher(`/watchlist/${String(animeId)}`, {
                 method: "DELETE",
@@ -100,6 +106,22 @@ export const api = {
                 headers: { Authorization: `Bearer ${token}` }
             }),
         getPublicList: (username: string) => fetcher(`/watchlist/${username}`),
+    },
+    notifications: {
+        getAll: (token: string, page = 1, limit = 20) =>
+            fetcher(`/notifications?page=${page}&limit=${limit}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            }),
+        markRead: (id: string | number, token: string) =>
+            fetcher(`/notifications/${id}/read`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` }
+            }),
+        markAllRead: (token: string) =>
+            fetcher("/notifications/read-all", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` }
+            }),
     },
     reactions: {
         create: (animeId: string | number, type: string, token: string) =>
@@ -147,6 +169,10 @@ export const api = {
         getMyStats: (token: string) => fetcher("/users/me/stats", {
             headers: { Authorization: `Bearer ${token}` }
         }),
+        getTaste: (token: string): Promise<{ topGenres: string[]; rankedGenres: { genre: string; score: number }[] }> =>
+            fetcher("/users/me/taste", {
+                headers: { Authorization: `Bearer ${token}` }
+            }),
         updateProfile: (data: { username?: string; bio?: string; avatar_url?: string; genres?: string[] }, token: string) =>
             fetcher("/users/me", {
                 method: "PATCH",

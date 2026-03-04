@@ -246,6 +246,19 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
                                                 </Link>
 
                                                 <Link
+                                                    href="/watchlist"
+                                                    onClick={() => setProfileOpen(false)}
+                                                    className="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-[13px] font-medium text-white/70 hover:text-white hover:bg-white/[0.06] transition-all group"
+                                                >
+                                                    <div className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center group-hover:bg-white/[0.08] transition-colors">
+                                                        <svg className="w-[18px] h-[18px] text-white/50 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                                                        </svg>
+                                                    </div>
+                                                    Manage Watchlist
+                                                </Link>
+
+                                                <Link
                                                     href="/settings"
                                                     onClick={() => setProfileOpen(false)}
                                                     className="flex items-center gap-3.5 px-3.5 py-3 rounded-xl text-[13px] font-medium text-white/70 hover:text-white hover:bg-white/[0.06] transition-all group"
@@ -281,11 +294,7 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
                                         </div>
                                     )}
                                 </>
-                            ) : (
-                                <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-full overflow-hidden border-2 border-white/10 flex items-center justify-center text-white/40 text-sm font-bold">
-                                    ?
-                                </div>
-                            )}
+                            ) : null}
                         </div>
 
                     </div>
