@@ -61,12 +61,12 @@ export default function PostComments({ postId, isOpen, onClose }: PostCommentsPr
     if (!isOpen) return null;
 
     return (
-        <div className="border-t border-white/[0.04] bg-[#0b0b0f]/60 px-6 md:px-8 py-8 transition-all animate-in fade-in slide-in-from-top-2 duration-300 backdrop-blur-sm">
+        <div className="border-t border-white/[0.04] bg-[#0b0b0f]/80 px-4 md:px-5 py-6 transition-all animate-in fade-in slide-in-from-top-2 duration-300 backdrop-blur-sm">
 
-            {/* Add Comment Input — Redesigned for No Overlap */}
-            <div className="mb-10 flex gap-5 items-start">
-                {/* Fixed Avatar - No Overlap */}
-                <div className="w-10 h-10 rounded-full bg-white/[0.06] shrink-0 flex items-center justify-center text-[12px] font-black text-white/30 border border-white/[0.08] overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.3)] mt-1">
+            {/* Add Comment Input — Reddit Style */}
+            <div className="mb-6 flex gap-3 items-start">
+                {/* Fixed Avatar */}
+                <div className="w-8 h-8 rounded-full bg-white/[0.06] shrink-0 flex items-center justify-center text-[10px] font-bold text-white/50 overflow-hidden shadow-sm mt-1">
                     {user?.avatar_url ? (
                         <img src={user.avatar_url} className="w-full h-full object-cover" alt="User" />
                     ) : (
@@ -74,27 +74,32 @@ export default function PostComments({ postId, isOpen, onClose }: PostCommentsPr
                     )}
                 </div>
 
-                <div className="flex-1 flex flex-col gap-0 bg-white/[0.02] border border-white/[0.06] rounded-3xl overflow-hidden focus-within:border-white/[0.12] focus-within:bg-white/[0.04] transition-all duration-300 group shadow-lg">
+                <div className="flex-1 flex flex-col bg-white/[0.03] border border-white/[0.1] rounded-lg overflow-hidden focus-within:border-white/[0.3] focus-within:bg-white/[0.05] transition-all duration-200 shadow-inner">
                     <textarea
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
-                        placeholder={token ? "What are your thoughts?" : "Sign in to join the transmission"}
-                        className="w-full bg-transparent border-none outline-none text-[15px] text-white/90 placeholder:text-white/20 resize-none min-h-[110px] p-5 font-medium leading-relaxed"
+                        placeholder={token ? "What are your thoughts?" : "Sign in to leave a comment"}
+                        className="w-full bg-transparent border-none outline-none text-[14px] text-white/90 placeholder:text-white/40 resize-none min-h-[90px] p-3 leading-relaxed"
                     />
-                    <div className="flex justify-end p-3 px-5 bg-white/[0.01] border-t border-white/[0.04]">
+                    <div className="flex justify-between items-center bg-white/[0.02] p-2 border-t border-white/[0.05]">
+                        <div className="flex items-center gap-2 pl-2">
+                            <button className="text-white/30 hover:text-white/60 transition-colors">
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                            </button>
+                        </div>
                         <button
                             onClick={handleSubmit}
                             disabled={submitting || !newComment.trim()}
-                            className="px-7 py-2.5 bg-[#e63030] hover:bg-[#ff3b3b] disabled:opacity-20 disabled:hover:bg-[#e63030] text-white text-[12px] font-black rounded-full transition-all active:scale-95 shadow-[0_8px_20px_-5px_rgba(230,48,48,0.4)]"
+                            className="px-5 py-1.5 bg-white text-black hover:bg-gray-200 disabled:opacity-50 disabled:bg-white/[0.1] disabled:text-white text-[12px] font-bold rounded-full transition-all active:scale-95"
                         >
-                            {submitting ? "Transmitting..." : "Comment"}
+                            {submitting ? "Posting..." : "Comment"}
                         </button>
                     </div>
                 </div>
             </div>
 
             {/* Sort/Filter Bar */}
-            <div className="flex items-center justify-between mb-8 pb-5 border-b border-white/[0.03]">
+            <div className="flex items-center justify-between mb-6 pb-2 border-b border-white/[0.05]">
                 <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2 cursor-pointer group">
                         <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] group-hover:text-white/50 transition-colors">Sort by:</span>
@@ -139,10 +144,10 @@ export default function PostComments({ postId, isOpen, onClose }: PostCommentsPr
                         {comments.map((comment, i) => (
                             <div key={comment.id || i} className="group flex gap-5 relative pb-8 last:pb-2">
                                 {/* Thread Line */}
-                                <div className="absolute left-[19px] top-12 bottom-0 w-[2px] bg-white/[0.04] group-hover:bg-[#e63030]/20 transition-all duration-500" />
+                                <div className="absolute left-[15px] top-10 bottom-0 w-[2px] bg-white/[0.05] group-hover:bg-white/[0.1] transition-colors" />
 
                                 {/* Avatar */}
-                                <div className="z-10 w-9 h-9 rounded-full bg-white/[0.06] shrink-0 flex items-center justify-center text-[11px] font-black text-white/30 border border-white/[0.08] overflow-hidden group-hover:border-[#e63030]/40 transition-all shadow-md">
+                                <div className="z-10 w-8 h-8 rounded-full bg-white/[0.06] shrink-0 flex items-center justify-center text-[10px] font-bold text-white/50 border border-white/[0.08] overflow-hidden shadow-sm">
                                     {comment.avatar_url ? (
                                         <img src={comment.avatar_url} alt="" className="w-full h-full object-cover" />
                                     ) : (
@@ -152,36 +157,36 @@ export default function PostComments({ postId, isOpen, onClose }: PostCommentsPr
 
                                 {/* Content */}
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <span className="text-[13px] font-black text-white/80 hover:text-[#e63030] cursor-pointer transition-colors tracking-tight">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <span className="text-[13px] font-bold text-white/80 hover:underline cursor-pointer transition-colors">
                                             {comment.username || "Anonymous"}
                                         </span>
-                                        <span className="text-[11px] text-white/20 font-black">•</span>
-                                        <span className="text-[11px] text-white/30 font-bold uppercase tracking-widest text-[10px]">
-                                            {comment.created_at ? new Date(comment.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : "Recently"}
+                                        <span className="text-[11px] text-white/30">•</span>
+                                        <span className="text-[12px] text-white/40">
+                                            {comment.created_at ? new Date(comment.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) : "Just now"}
                                         </span>
                                     </div>
-                                    <div className="text-[15px] text-white/80 leading-relaxed font-medium pr-6 selection:bg-[#e63030]/30">
+                                    <div className="text-[14px] text-white/90 leading-relaxed font-normal p-0 selection:bg-white/20">
                                         {comment.content}
                                     </div>
 
                                     {/* Action bar — Reddit Inspired */}
-                                    <div className="flex items-center gap-6 mt-4">
-                                        <div className="flex items-center gap-1 bg-white/[0.04] rounded-full p-0.5 border border-white/[0.04]">
-                                            <button className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/[0.06] text-white/30 hover:text-[#e63030] transition-all">
-                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
+                                    <div className="flex items-center gap-2 mt-2 -ml-2">
+                                        <div className="flex items-center">
+                                            <button className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/[0.08] text-white/50 hover:text-[#FF4500] transition-colors">
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4 15l8-8 8 8" /></svg>
                                             </button>
-                                            <span className="text-[12px] font-black text-white/60 px-1">1</span>
-                                            <button className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/[0.06] text-white/30 hover:text-blue-400 transition-all">
-                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                                            <span className="text-[12px] font-bold text-white/70 min-w-[12px] text-center">1</span>
+                                            <button className="w-7 h-7 flex items-center justify-center rounded hover:bg-white/[0.08] text-white/50 hover:text-[#7193ff] transition-colors">
+                                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20 9l-8 8-8-8" /></svg>
                                             </button>
                                         </div>
-                                        <button className="flex items-center gap-2 text-[11px] font-black text-white/30 hover:text-white/60 uppercase tracking-widest transition-all">
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                                        <button className="flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-white/[0.08] text-[12px] font-bold text-white/70 transition-colors">
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                                             Reply
                                         </button>
-                                        <button className="text-[11px] font-black text-white/30 hover:text-white/60 uppercase tracking-widest transition-all">Share</button>
-                                        <button className="text-[11px] font-black text-white/30 hover:text-white/60 uppercase tracking-widest transition-all">Report</button>
+                                        <button className="px-2 py-1.5 rounded hover:bg-white/[0.08] text-[12px] font-bold text-white/70 transition-colors">Share</button>
+                                        <button className="px-2 py-1.5 rounded hover:bg-white/[0.08] text-[12px] font-bold text-white/70 transition-colors">Report</button>
                                     </div>
                                 </div>
                             </div>

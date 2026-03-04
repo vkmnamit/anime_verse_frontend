@@ -24,7 +24,7 @@ export default function ProfileTabs({ username }: { username: string }) {
     const activeTab = getActiveTab();
 
     return (
-        <div className="flex items-center gap-12 overflow-x-auto pt-10 pb-0 mb-16 border-b border-white/[0.04] scrollbar-hide">
+        <div className="flex items-center gap-8 overflow-x-auto pt-6 pb-0 mb-8 border-b border-white/10 scrollbar-hide">
             {tabs.map((tab) => {
                 const href = `/profile/${username}${tab.href}`;
                 const isActive = activeTab === tab.id;
@@ -33,16 +33,13 @@ export default function ProfileTabs({ username }: { username: string }) {
                     <Link
                         key={tab.id}
                         href={href}
-                        className={`relative pb-5 text-[15px] font-semibold transition-all shrink-0 ${isActive
-                            ? "text-white"
-                            : "text-white/30 hover:text-white/60"
+                        className={`relative pb-3 text-[14px] font-medium transition-colors shrink-0 ${isActive ? "text-white" : "text-white/50 hover:text-white/80"
                             }`}
                     >
                         {tab.label}
+
                         {isActive && (
-                            <div className="absolute bottom-0 left-0 right-0 flex justify-center">
-                                <div className="w-10 h-[3.5px] bg-[#e63030] rounded-t-full shadow-[0_0_15px_rgba(230,48,48,0.4)]" />
-                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white rounded-t-sm" />
                         )}
                     </Link>
                 );

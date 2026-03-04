@@ -5,92 +5,128 @@ import { useAuth } from "@/src/context/AuthContext";
 
 export default function AccountPage() {
     const { user } = useAuth();
+    const [isChangingPassword, setIsChangingPassword] = useState(false);
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
     return (
-        <div className="max-w-3xl animate-in fade-in duration-500 space-y-12">
+        <div className="w-full max-w-2xl space-y-10 animate-in fade-in duration-500">
 
-            {/* Email Section */}
-            <div className="space-y-6">
-                <div className="flex flex-col gap-5">
-                    <label className="text-[14px] font-bold text-white tracking-wide">Email</label>
-                    <div className="flex items-center gap-4">
-                        <div className="flex-1 bg-white/[0.04] border border-white/[0.06] rounded-full px-6 py-3.5 text-[14px] text-white/80 focus-within:border-[#e63030]/30 transition-all">
-                            {user?.email || "user@example.com"}
+            {/* General Section */}
+            <section>
+                <h2 className="text-[18px] font-semibold text-white mb-4">General</h2>
+
+                <div className="bg-white/[0.02] border border-white/5 rounded-xl flex flex-col">
+                    <div className="flex items-center justify-between p-6 border-b border-white/5">
+                        <div className="flex flex-col">
+                            <span className="text-[15px] font-medium text-white">Email address</span>
+                            <span className="text-[13px] text-white/55 mt-1">The email associated with your account</span>
                         </div>
-                        <div className="px-5 py-2.5 bg-[#0e2a15] text-[#4ade80] text-[12px] font-bold rounded-full border border-[#4ade80]/10 flex items-center justify-center">
-                            Verified
+                        <div className="flex items-center gap-4 cursor-pointer group">
+                            <span className="text-[14px] text-white/70">{user?.email || "user@example.com"}</span>
+                            <svg className="w-5 h-5 text-white/40 group-hover:text-white/80 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-6">
+                        <div className="flex flex-col">
+                            <span className="text-[15px] font-medium text-white">Location customization</span>
+                            <span className="text-[13px] text-white/55 mt-1">Specify your location for better recommendations</span>
+                        </div>
+                        <div className="flex items-center gap-4 cursor-pointer group">
+                            <span className="text-[14px] text-white/70">Use approximate location</span>
+                            <svg className="w-5 h-5 text-white/40 group-hover:text-white/80 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
                         </div>
                     </div>
                 </div>
-                <button className="px-5 py-2.5 bg-white/[0.06] hover:bg-white/[0.1] text-white text-[13px] font-bold rounded-full transition-all active:scale-95 border border-white/[0.05]">
-                    Change Email
-                </button>
-            </div>
+            </section>
 
-            <div className="h-[1px] w-full bg-white/[0.04]" />
+            {/* Security Section */}
+            <section>
+                <h2 className="text-[18px] font-semibold text-white mb-4">Security</h2>
 
-            {/* Password Section */}
-            <div className="space-y-8">
-                <h3 className="text-[14px] font-bold text-white tracking-wide">Change Password</h3>
-                <div className="space-y-4 max-w-lg">
-                    <div className="relative group">
-                        <input
-                            type="password"
-                            value={oldPassword}
-                            onChange={(e) => setOldPassword(e.target.value)}
-                            placeholder="Enter old password"
-                            className="w-full bg-white/[0.04] border border-white/[0.06] rounded-full px-6 py-3.5 text-[13px] text-white outline-none focus:border-[#e63030]/30 transition-all placeholder:text-white/20"
-                        />
-                        <div className="absolute right-5 top-1/2 -translate-y-1/2 opacity-20 group-hover:opacity-40 transition-opacity">👁️</div>
+                <div className="bg-white/[0.02] border border-white/5 rounded-xl flex flex-col">
+                    <div className="flex flex-col p-6 border-b border-white/5">
+                        <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                                <span className="text-[15px] font-medium text-white">Password</span>
+                                <span className="text-[13px] text-white/55 mt-1">Change your security key</span>
+                            </div>
+                            <button
+                                onClick={() => setIsChangingPassword(!isChangingPassword)}
+                                className="px-5 py-2 bg-white/10 hover:bg-white/15 border border-white/5 text-white text-[14px] font-medium rounded-lg transition-colors"
+                            >
+                                Change Password
+                            </button>
+                        </div>
+
+                        {isChangingPassword && (
+                            <div className="mt-6 pt-5 border-t border-white/5 space-y-4 max-w-sm">
+                                <input
+                                    type="password"
+                                    value={oldPassword}
+                                    onChange={(e) => setOldPassword(e.target.value)}
+                                    placeholder="Old password"
+                                    className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-2.5 text-[14px] text-white outline-none focus:border-white/30 transition-all placeholder:text-white/30"
+                                />
+                                <input
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    placeholder="New password"
+                                    className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-2.5 text-[14px] text-white outline-none focus:border-white/30 transition-all placeholder:text-white/30"
+                                />
+                                <input
+                                    type="password"
+                                    value={confirmPassword}
+                                    onChange={(e) => setConfirmPassword(e.target.value)}
+                                    placeholder="Confirm new password"
+                                    className="w-full bg-white/[0.03] border border-white/10 rounded-lg px-4 py-2.5 text-[14px] text-white outline-none focus:border-white/30 transition-all placeholder:text-white/30"
+                                />
+                                <div className="pt-2 flex justify-end">
+                                    <button className="px-6 py-2 bg-white text-black hover:bg-[#eaeaea] text-[14px] font-semibold rounded-lg transition-colors shadow-sm">
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                    <div className="relative group">
-                        <input
-                            type="password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            placeholder="Enter new password"
-                            className="w-full bg-white/[0.04] border border-white/[0.06] rounded-full px-6 py-3.5 text-[13px] text-white outline-none focus:border-[#e63030]/30 transition-all placeholder:text-white/20"
-                        />
-                        <div className="absolute right-5 top-1/2 -translate-y-1/2 opacity-20 group-hover:opacity-40 transition-opacity">👁️</div>
-                    </div>
-                    <div className="relative group">
-                        <input
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="Confirm new password"
-                            className="w-full bg-white/[0.04] border border-white/[0.06] rounded-full px-6 py-3.5 text-[13px] text-white outline-none focus:border-[#e63030]/30 transition-all placeholder:text-white/20"
-                        />
-                        <div className="absolute right-5 top-1/2 -translate-y-1/2 opacity-20 group-hover:opacity-40 transition-opacity">👁️</div>
+
+                    <div className="flex items-center justify-between p-6">
+                        <div className="flex flex-col">
+                            <span className="text-[15px] font-medium text-white">Two-factor authentication</span>
+                            <span className="text-[13px] text-white/55 mt-1">Help protect your account from unauthorized access</span>
+                        </div>
+                        <div className="w-10 h-6 bg-white/20 rounded-full relative cursor-pointer border border-white/5 shadow-inner">
+                            <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm" />
+                        </div>
                     </div>
                 </div>
-                <button className="px-10 py-3 bg-white/[0.06] hover:bg-white/[0.1] text-white/30 hover:text-white text-[13px] font-bold rounded-full transition-all active:scale-95 border border-white/[0.05]">
-                    Save
-                </button>
-            </div>
+            </section>
 
-            <div className="h-[1px] w-full bg-white/[0.04]" />
+            {/* Advanced Section */}
+            <section>
+                <h2 className="text-[18px] font-semibold text-white mb-4">Advanced</h2>
 
-            {/* Danger Zone */}
-            <div className="space-y-6">
-                <h3 className="text-xl font-black text-[#e63030] tracking-tight">Danger Zone</h3>
-                <div className="space-y-4">
-                    <h4 className="text-[15px] font-bold text-white">Delete Account</h4>
-                    <p className="text-white/40 text-[13px] font-medium leading-relaxed">
-                        Delete your account and all its associated data.
-                    </p>
-                    <button className="flex items-center gap-3 px-6 py-3.5 bg-[#e63030] hover:bg-[#ff3b3b] text-white text-[13px] font-bold rounded-full transition-all active:scale-95 shadow-lg shadow-red-950/20">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <div className="bg-white/[0.02] border border-[#ff4545]/20 rounded-xl flex flex-col">
+                    <div className="flex items-center justify-between p-6 cursor-pointer group">
+                        <div className="flex flex-col">
+                            <span className="text-[15px] font-medium text-[#ff4545] group-hover:text-[#ff5c5c] transition-colors">Delete account</span>
+                            <span className="text-[13px] text-white/55 mt-1">Permanently remove your account and all its data</span>
+                        </div>
+                        <svg className="w-5 h-5 text-white/40 group-hover:text-white/80 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
-                        Delete Account
-                    </button>
+                    </div>
                 </div>
-            </div>
+            </section>
 
         </div>
     );
 }
+

@@ -16,8 +16,7 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
 
     const [profileData, setProfileData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-
-    const isOwnProfile = currentUser?.username === profileUsername;
+    // isOwnProfile moved down
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -47,8 +46,20 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
         } catch { }
     };
 
+    const isInvalidUsername = (u: any) => !u || String(u).trim() === "null" || String(u).trim() === "undefined" || String(u).trim() === "unset";
+
+    // An empty or invalid currentUser username means they are routing to /profile/unset or /profile/null
+    const isOwnProfile = Boolean(
+        currentUser?.username === profileUsername ||
+        (currentUser && isInvalidUsername(currentUser.username) && isInvalidUsername(profileUsername))
+    );
+
+    const safeUsername = !isInvalidUsername(profileData?.username)
+        ? profileData.username
+        : (!isInvalidUsername(profileUsername) ? profileUsername : "User");
+
     const user = {
-        username: profileData?.username || profileUsername || "Unnamed",
+        username: safeUsername,
         avatar: profileData?.avatar_url || (isOwnProfile && currentUser?.avatar_url) ? (profileData?.avatar_url || currentUser?.avatar_url || "/default-avatar.png") : "/default-avatar.png",
         bio: profileData?.bio || (isOwnProfile ? currentUser?.bio : "") || "",
         tags: profileData?.genres || (isOwnProfile ? currentUser?.genres : []) || [],

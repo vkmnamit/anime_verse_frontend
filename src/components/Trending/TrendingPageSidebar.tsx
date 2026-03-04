@@ -87,7 +87,58 @@ export default function TrendingPageSidebar() {
     return (
         <aside className="w-full lg:w-[360px] xl:w-[400px] shrink-0 flex flex-col gap-8 lg:sticky lg:top-24 lg:h-[calc(100vh-120px)] lg:overflow-y-auto no-scrollbar pb-10">
 
-            {/* 1. Pulse of the Verse — Real-time Fluctuating Graph */}
+            {/* 0. Battle Champions ─────────────────────────────────────────── */}
+            <div className="bg-white/[0.03] backdrop-blur-xl border border-white/5 p-6 flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#e63030] mb-1">⚡ Battle Week</span>
+                        <h3 className="text-sm font-black text-white uppercase tracking-[0.2em]">Champions</h3>
+                    </div>
+                    <a href="/battles" className="text-[9px] font-black uppercase tracking-widest text-white/30 hover:text-[#e63030] transition-colors">
+                        View Bracket →
+                    </a>
+                </div>
+
+                {battleWinners.length === 0 ? (
+                    /* No winners yet */
+                    <div className="flex flex-col items-center justify-center py-6 gap-2">
+                        <span className="text-2xl">⚔️</span>
+                        <p className="text-[11px] font-semibold text-white/30 text-center">No champions yet — voting is live!</p>
+                        <a href="/battles"
+                            className="mt-1 px-4 py-1.5 text-[10px] font-black uppercase tracking-wider text-white rounded-full"
+                            style={{ background: "rgba(230,48,48,0.15)", border: "1px solid rgba(230,48,48,0.25)" }}>
+                            Vote Now
+                        </a>
+                    </div>
+                ) : (
+                    <div className="flex flex-col gap-3">
+                        {battleWinners.map((w, i) => (
+                            <div key={i} className="flex items-center gap-3 group">
+                                {/* Rank */}
+                                <span className="text-[11px] font-black text-white/20 w-4 shrink-0">#{i + 1}</span>
+                                {/* Poster */}
+                                <div className="w-9 h-12 rounded-md overflow-hidden shrink-0 border border-white/10">
+                                    {w.image ? (
+                                        <img src={w.image} alt={w.title} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full bg-white/5" />
+                                    )}
+                                </div>
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[11px] font-black text-white truncate group-hover:text-[#e63030] transition-colors">{w.title}</p>
+                                    <p className="text-[9px] font-semibold text-white/30 uppercase tracking-wider">{w.round}</p>
+                                </div>
+                                {/* Vote pct */}
+                                <div className="flex flex-col items-end shrink-0">
+                                    <span className="text-[12px] font-black text-[#e63030]">{w.votePct}%</span>
+                                    <span className="text-[8px] text-white/20 font-semibold uppercase">Votes</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
             <div className="bg-white/[0.03] backdrop-blur-xl border border-white/5 p-6 flex flex-col gap-6">
                 <div className="flex items-center justify-between">
                     <div className="flex flex-col">

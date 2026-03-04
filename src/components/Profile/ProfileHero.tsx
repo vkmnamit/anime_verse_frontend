@@ -31,9 +31,9 @@ export default function ProfileHero({ user, isOwnProfile }: ProfileHeroProps) {
                 />
 
                 {/* Multi-layered premium overlays */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b10] via-[#0b0b10]/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0b0b0f] via-[#0b0b0f]/40 to-transparent" />
                 <div className="absolute inset-0 bg-[#e63030]/10 mix-blend-overlay" />
-                <div className="absolute inset-0 bg-gradient-to-r from-[#0b0b10]/80 via-[#0b0b10]/30 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#0b0b0f]/80 via-[#0b0b0f]/30 to-transparent" />
             </div>
 
             {/* Profile Info Overlay */}
@@ -41,10 +41,10 @@ export default function ProfileHero({ user, isOwnProfile }: ProfileHeroProps) {
                 <div className="flex flex-col md:flex-row md:items-end gap-6 md:gap-8">
                     {/* Avatar with Status */}
                     <div className="relative shrink-0 group/avatar">
-                        <div className="w-28 h-28 md:w-36 md:h-36 rounded-none overflow-hidden border-[6px] border-[#0b0b10] shadow-[0_0_40px_rgba(0,0,0,0.5)] relative z-10 transition-transform group-hover/avatar:scale-105 duration-500">
+                        <div className="w-28 h-28 md:w-36 md:h-36 rounded-full overflow-hidden border-[6px] border-[#0b0b0f] shadow-[0_0_40px_rgba(0,0,0,0.5)] relative z-10 transition-transform group-hover/avatar:scale-105 duration-500">
                             <Image
-                                src={user.avatar}
-                                alt={user.username}
+                                src={user?.avatar || "/default-avatar.png"}
+                                alt={user?.username || "Profile Avatar"}
                                 fill
                                 className="object-cover"
                             />
@@ -59,11 +59,11 @@ export default function ProfileHero({ user, isOwnProfile }: ProfileHeroProps) {
                     <div className="flex-1 flex flex-col gap-2">
                         <div className="flex items-center gap-3">
                             <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight drop-shadow-md">
-                                {user.username}
+                                {user?.username || "Unknown User"}
                             </h1>
                             <span className="text-yellow-400 text-xl drop-shadow-sm">⭐</span>
                         </div>
-                        <p className="text-white/50 text-base font-medium">@{user.username}</p>
+                        <p className="text-white/50 text-base font-medium">@{user?.username || "unknown"}</p>
                         <p className="text-[#c0c0d8] text-base md:text-lg max-w-2xl leading-relaxed mt-1 font-medium drop-shadow-sm italic">
                             {user.bio}
                         </p>

@@ -32,18 +32,28 @@ export default function AnimeCard({ anime, index = 0, variant = "default" }: Pro
     const router = useRouter();
     const isLarge = variant === "large";
     const [wishlisted, setWishlisted] = useState(false);
+    const [liked, setLiked] = useState(false);
     const [commentCount, setCommentCount] = useState<number | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [isLiking, setIsLiking] = useState(false);
 
-    // 1. Check if wishlisted on mount
+    // 1. Check states on mount
     useEffect(() => {
         if (!token) return;
+
+        // Check watchlist
         api.watchlist.list(token)
             .then((data: any) => {
                 const list = data?.data || data || [];
-                // Check if this anime ID is in the user's watchlist
                 const exists = list.some((item: any) => String(item.anime_id) === String(anime.id));
                 setWishlisted(exists);
+            })
+            .catch(() => { });
+
+        // Check reaction
+        api.reactions.getMine(anime.id, token)
+            .then((res: any) => {
+                if (res?.data) setLiked(true);
             })
             .catch(() => { });
     }, [anime.id, token]);
@@ -72,23 +82,48 @@ export default function AnimeCard({ anime, index = 0, variant = "default" }: Pro
 
         if (isSyncing) return;
 
-        // Optimistic UI
         const nextState = !wishlisted;
         setWishlisted(nextState);
         setIsSyncing(true);
 
         try {
             if (nextState) {
-                await api.watchlist.add(anime.id, "planned", token);
+                await api.watchlist.add(anime.id, "planned", token, anime);
             } else {
                 await api.watchlist.remove(anime.id, token);
             }
         } catch (err) {
-            // Revert on error
             setWishlisted(!nextState);
             console.error("Wishlist sync failed:", err);
         } finally {
             setIsSyncing(false);
+        }
+    };
+
+    const handleLike = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!token) {
+            router.push("/auth");
+            return;
+        }
+
+        if (isLiking) return;
+
+        const nextState = !liked;
+        setLiked(nextState);
+        setIsLiking(true);
+
+        try {
+            if (nextState) {
+                await api.reactions.create(anime.id, "fire", token);
+            } else {
+                await api.reactions.remove(anime.id, token);
+            }
+        } catch (err) {
+            setLiked(!nextState);
+            console.error("Like sync failed:", err);
+        } finally {
+            setIsLiking(false);
         }
     };
 
@@ -107,21 +142,40 @@ export default function AnimeCard({ anime, index = 0, variant = "default" }: Pro
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
 
-                {/* Wishlist Heart — Top Right */}
-                <button
-                    onClick={handleWishlist}
-                    className="absolute top-2 right-2 z-30 w-7 h-7 flex items-center justify-center rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70 transition-all active:scale-90"
-                    aria-label="Add to wishlist"
-                >
-                    <svg
-                        className={`w-3.5 h-3.5 transition-colors duration-300 ${wishlisted ? "fill-[#e63030] text-[#e63030]" : "fill-none text-white/80"}`}
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
+                {/* Action Buttons — Top Right (Stacked) */}
+                <div className="absolute top-2 right-2 z-30 flex flex-col gap-1.5">
+                    {/* Like Heart */}
+                    <button
+                        onClick={handleLike}
+                        className="w-7 h-7 flex items-center justify-center rounded-sm bg-black/40 backdrop-blur-md hover:bg-black/60 transition-all active:scale-90 border border-white/5"
+                        aria-label={liked ? "Unlike" : "Like"}
                     >
-                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                    </svg>
-                </button>
+                        <svg
+                            className={`w-3.5 h-3.5 transition-all duration-300 ${liked ? "fill-[#e63030] text-[#e63030] scale-110" : "fill-none text-white/80"}`}
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                        >
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                    </button>
+
+                    {/* Wishlist Bookmark */}
+                    <button
+                        onClick={handleWishlist}
+                        className="w-7 h-7 flex items-center justify-center rounded-sm bg-black/40 backdrop-blur-md hover:bg-black/60 transition-all active:scale-90 border border-white/5"
+                        aria-label={wishlisted ? "Remove from watchlist" : "Add to watchlist"}
+                    >
+                        <svg
+                            className={`w-3.5 h-3.5 transition-all duration-300 ${wishlisted ? "fill-[#30e6a0] text-[#30e6a0]" : "fill-none text-white/80"}`}
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                        >
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                        </svg>
+                    </button>
+                </div>
 
                 {/* Bottom Gradient Overlay */}
                 <div className="absolute inset-x-0 bottom-0 h-[65%] bg-gradient-to-t from-black via-black/70 to-transparent z-10" />
