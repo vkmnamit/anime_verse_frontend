@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { api, setOnAuthError } from "@/src/lib/api";
+import { supabase } from "@/src/lib/supabase";
 import { useRouter } from "next/navigation";
 
 interface User {
@@ -24,6 +25,8 @@ interface AuthContextType {
     login: (data: any) => Promise<void>;
     signup: (data: any) => Promise<void>;
     logout: () => Promise<void>;
+    loginWithGoogle: () => Promise<void>;
+    setTokenAndUser: (token: string, user: User) => void;
     setUser: React.Dispatch<React.SetStateAction<User | null>>;
     refreshUser: () => Promise<void>;
 }
@@ -113,8 +116,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const loginWithGoogle = async () => {
+        const { error } = await supabase.auth.signInWithOAuth({
+            provider: "google",
+            options: {
+                redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://animeverse-gules.vercel.app"}/auth/callback`,
+            },
+        });
+        if (error) throw error;
+    };
+
+    const setTokenAndUser = (newToken: string, newUser: User) => {
+        setToken(newToken);
+        setUser(newUser);
+        localStorage.setItem("auth_token", newToken);
+    };
+
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, signup, logout, setUser, refreshUser }}>
+        <AuthContext.Provider value={{ user, token, loading, login, signup, logout, loginWithGoogle, setTokenAndUser, setUser, refreshUser }}>
             {children}
         </AuthContext.Provider>
     );
