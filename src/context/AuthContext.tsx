@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { api, setOnAuthError } from "@/src/lib/api";
-import { supabase } from "@/src/lib/supabase";
 import { useRouter } from "next/navigation";
 
 interface User {
@@ -117,13 +116,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     const loginWithGoogle = async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
+        const supabaseUrl = "https://dplxmegevviucdnllvev.supabase.co"
+        const redirectTo = `${typeof window !== "undefined" ? window.location.origin : "https://animeverse-gules.vercel.app"}/auth/callback`
+        const params = new URLSearchParams({
             provider: "google",
-            options: {
-                redirectTo: `${typeof window !== "undefined" ? window.location.origin : "https://animeverse-gules.vercel.app"}/auth/callback`,
-            },
-        });
-        if (error) throw error;
+            redirect_to: redirectTo,
+        })
+        window.location.href = `${supabaseUrl}/auth/v1/authorize?${params.toString()}`
     };
 
     const setTokenAndUser = (newToken: string, newUser: User) => {
