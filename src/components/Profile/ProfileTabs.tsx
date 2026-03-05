@@ -24,26 +24,28 @@ export default function ProfileTabs({ username }: { username: string }) {
     const activeTab = getActiveTab();
 
     return (
-        <div className="flex items-center gap-8 overflow-x-auto pt-6 pb-0 mb-8 border-b border-white/10 scrollbar-hide">
-            {tabs.map((tab) => {
-                const href = `/profile/${username}${tab.href}`;
-                const isActive = activeTab === tab.id;
+        <div className="flex flex-col items-center gap-6 pt-12 pb-12 transition-all">
+            <div className="flex items-center justify-center gap-10 overflow-x-auto scrollbar-hide w-full">
+                {tabs.map((tab) => {
+                    const href = `/profile/${username}${tab.href}`;
+                    const isActive = activeTab === tab.id;
 
-                return (
-                    <Link
-                        key={tab.id}
-                        href={href}
-                        className={`relative pb-3 text-[14px] font-medium transition-colors shrink-0 ${isActive ? "text-white" : "text-white/50 hover:text-white/80"
-                            }`}
-                    >
-                        {tab.label}
+                    return (
+                        <Link
+                            key={tab.id}
+                            href={href}
+                            className={`relative py-2 text-[15px] font-bold transition-all shrink-0 tracking-tight ${isActive ? "text-[#e63030]" : "text-white/40 hover:text-white/80"
+                                }`}
+                        >
+                            {tab.label}
 
-                        {isActive && (
-                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-white rounded-t-sm" />
-                        )}
-                    </Link>
-                );
-            })}
+                            {isActive && (
+                                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-[#e63030] shadow-[0_0_15px_rgba(230,48,48,0.5)]" />
+                            )}
+                        </Link>
+                    );
+                })}
+            </div>
         </div>
     );
 }
