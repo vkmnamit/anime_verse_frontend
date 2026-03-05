@@ -216,9 +216,8 @@ export default function ProfileHero({ user, stats, isOwnProfile, onProfileUpdate
                         {/* Name & Handle */}
                         <div className="flex flex-col gap-2 pb-2">
                             <div className="flex flex-col">
-                                <h1 className="text-3xl md:text-5xl font-black text-white selection:bg-[#e63030]/30">
+                                <h1 className="text-3xl md:text-5xl font-black text-white selection:bg-[#e63030]/30 uppercase italic tracking-tighter">
                                     {user.username}
-                                    {user.isVip && <span className="ml-3 text-lg align-middle">💎</span>}
                                 </h1>
                                 <p className="text-white/40 font-bold text-lg md:text-xl tracking-tight">
                                     @{user.username.toLowerCase().replace(/\s+/g, '')}
@@ -268,9 +267,10 @@ export default function ProfileHero({ user, stats, isOwnProfile, onProfileUpdate
 
                 {/* Bio Section at Bottom of Card */}
                 <div className="px-8 md:px-16 pb-12">
-                    <div className="max-w-3xl">
-                        <p className="text-white/70 text-lg md:text-xl leading-relaxed font-medium">
-                            {user.bio || "No combat record found."}
+                    <div className="max-w-3xl flex flex-col gap-4">
+                        <label className="text-[10px] font-black text-white/20 uppercase tracking-[0.4em]">Public Declaration</label>
+                        <p className="text-white/60 text-lg md:text-xl leading-relaxed font-medium italic">
+                            "{user.bio || "No transmission received."}"
                         </p>
                     </div>
                 </div>

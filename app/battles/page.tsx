@@ -62,7 +62,7 @@ function getCurrentTournamentDay(): number {
 
 // ─── AnimeVsCard ──────────────────────────────────────────────────────────────
 function AnimeVsCard({
-    slotA, slotB, votesA, votesB, winner, isLive, matchId, onVote, votedMatch, isVoting,
+    slotA, slotB, votesA, votesB, winner, isLive, matchId, onVote, votedMatch, isVoting, isPast,
 }: {
     slotA: AnimeSlot | null;
     slotB: AnimeSlot | null;
@@ -74,6 +74,7 @@ function AnimeVsCard({
     onVote: (matchId: string, side: "A" | "B") => void;
     votedMatch: "A" | "B" | undefined;
     isVoting?: boolean;
+    isPast?: boolean;          // day has passed — voting closed, show results only
 }) {
     const total = votesA + votesB;
     const pctA = total ? Math.round((votesA / total) * 100) : 50;
@@ -116,7 +117,7 @@ function AnimeVsCard({
                                     <div className="h-full rounded-none transition-all duration-700"
                                         style={{ width: `${pct}%`, background: isWinner ? "#e63030" : "rgba(255,255,255,0.15)" }} />
                                 </div>
-                                {!winner && (
+                                {!winner && !isPast && (
                                     <button
                                         onClick={() => onVote(matchId, side)}
                                         disabled={!!votedMatch || !!isVoting}
@@ -128,6 +129,12 @@ function AnimeVsCard({
                                     >
                                         {isVoting && !votedMatch ? "..." : votedMatch === side ? "Selected" : "Vote"}
                                     </button>
+                                )}
+                                {!winner && isPast && votedMatch === side && (
+                                    <div className="w-full h-9 rounded-none flex items-center justify-center text-[10px] font-black uppercase tracking-[0.2em] text-white/30"
+                                        style={{ border: "1px solid rgba(255,255,255,0.06)" }}>
+                                        Your pick
+                                    </div>
                                 )}
                             </div>
                         )}
@@ -394,6 +401,7 @@ export default function BattlesPage() {
                                         onVote={handleVote}
                                         votedMatch={votedMatches[match.id]}
                                         isVoting={votingMatch === match.id}
+                                        isPast={match.dayNumber < currentTournamentDay}
                                     />
                                 </div>
                             ))}
