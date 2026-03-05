@@ -75,9 +75,9 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
     };
 
     return (
-        <div className="relative min-h-screen bg-[#0b0b0f] text-white font-sans">
+        <div className="relative min-h-screen bg-[#000000] text-white font-sans">
             <Navbar />
-            <main className="pt-28 pb-20 px-6 lg:px-12 max-w-[1700px] mx-auto min-h-screen">
+            <main className="pt-32 pb-24 px-6 lg:px-12 max-w-[1700px] mx-auto min-h-screen flex flex-col gap-20">
                 {loading ? (
                     <div className="flex items-center justify-center py-40">
                         <div className="w-12 h-12 border-2 border-white/5 border-t-[#e63030] animate-spin rounded-full shadow-[0_0_20px_rgba(230,48,48,0.2)]" />
@@ -90,12 +90,14 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                             isOwnProfile={isOwnProfile}
                             onProfileUpdated={handleProfileUpdated}
                         />
-                        <ProfileTabs username={profileUsername} />
-                        {children}
+                        <div className="flex flex-col gap-24">
+                            <ProfileTabs username={profileUsername} />
+                            {children}
+                        </div>
                     </>
                 )}
             </main>
-            <footer className="h-24 bg-[#0b0b0f]" />
+            <footer className="h-24 bg-[#000000]" />
         </div>
     );
 }

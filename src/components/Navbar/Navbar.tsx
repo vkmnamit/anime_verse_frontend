@@ -99,6 +99,17 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
         }
     };
 
+    const handleMarkRead = async (id: string | number) => {
+        if (!token) return;
+        try {
+            await api.notifications.markRead(id, token);
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        } catch (err) {
+            console.error("Failed to mark read", err);
+        }
+    };
+
     const navLinks = [
         { href: "/", label: "Home", active: pathname === "/" },
         { href: "/community", label: "Community", active: pathname === "/community" },
@@ -225,7 +236,7 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
                                                             <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#e63030] rounded-full border-2 border-[#1e1c23]" />
                                                         )}
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
+                                                    <div className="flex-1 min-w-0" onClick={() => !notif.is_read && handleMarkRead(notif.id)}>
                                                         <p className="text-[13px] leading-snug">
                                                             <span className="font-bold text-white">{notif.actor_username}</span>{" "}
                                                             <span className="text-white/60">{notif.message || "sent you a notification"}</span>
@@ -497,6 +508,27 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
                                     {link.label}
                                 </Link>
                             ))}
+                            {isLoggedIn && (
+                                <Link
+                                    href="/notifications"
+                                    onClick={() => setMobileMenuOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-all"
+                                    style={pathname === "/notifications" ? {
+                                        background: "linear-gradient(90deg, rgba(230,48,48,0.28), rgba(230,48,48,0.06))",
+                                        color: "#ff6b6b",
+                                    } : { color: "rgba(255,255,255,0.55)" }}
+                                >
+                                    <span className="w-4 h-4 shrink-0" style={{ color: pathname === "/notifications" ? "#ff6b6b" : "rgba(255,255,255,0.3)" }}>
+                                        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg>
+                                    </span>
+                                    Notifications
+                                    {unreadCount > 0 && (
+                                        <span className="ml-auto px-1.5 py-0.5 rounded-full text-[9px] font-black bg-[#e63030] text-white">
+                                            {unreadCount}
+                                        </span>
+                                    )}
+                                </Link>
+                            )}
                         </div>
 
                         {/* Divider */}

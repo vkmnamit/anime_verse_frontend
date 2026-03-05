@@ -15,6 +15,7 @@ export default function EditProfileModal({ isOpen, onClose, onSaved }: EditProfi
     const [username, setUsername] = useState("");
     const [bio, setBio] = useState("");
     const [avatarUrl, setAvatarUrl] = useState("");
+    const [bannerUrl, setBannerUrl] = useState("");
     const [genres, setGenres] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -31,6 +32,7 @@ export default function EditProfileModal({ isOpen, onClose, onSaved }: EditProfi
             setUsername(user.username || "");
             setBio(user.bio || "");
             setAvatarUrl(user.avatar_url || "");
+            setBannerUrl(user.banner_url || "");
             setGenres(user.genres || []);
             setError("");
             setSuccess(false);
@@ -60,6 +62,7 @@ export default function EditProfileModal({ isOpen, onClose, onSaved }: EditProfi
             if (username.trim() !== user?.username) updates.username = username.trim();
             if (bio.trim() !== (user?.bio || "")) updates.bio = bio.trim();
             if (avatarUrl.trim() !== (user?.avatar_url || "")) updates.avatar_url = avatarUrl.trim() || undefined;
+            if (bannerUrl.trim() !== (user?.banner_url || "")) updates.banner_url = bannerUrl.trim() || undefined;
 
             // Always sync genres if they changed
             const currentGenres = user?.genres || [];
@@ -106,27 +109,39 @@ export default function EditProfileModal({ isOpen, onClose, onSaved }: EditProfi
 
                 {/* Body */}
                 <div className="px-8 py-8 space-y-8 max-h-[75vh] overflow-y-auto custom-scrollbar">
-                    {/* Avatar Preview */}
-                    <div className="flex flex-col items-center gap-6 pb-6 border-b border-white/[0.03]">
-                        <div className="w-24 h-24 rounded-none bg-white/[0.02] border border-white/[0.08] overflow-hidden flex items-center justify-center shrink-0 relative group/avatar">
-                            {avatarUrl ? (
-                                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover transition-transform group-hover/avatar:scale-110 duration-700" />
-                            ) : (
-                                <span className="text-2xl font-black text-white/10 italic">Signal</span>
-                            )}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-white">Preview</span>
+                    {/* Avatar preview */}
+                    <div className="flex flex-col md:flex-row gap-8 pb-8 border-b border-white/[0.03]">
+                        <div className="flex flex-col items-center gap-4">
+                            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2 block text-center">Avatar Preview</label>
+                            <div className="w-24 h-24 rounded-full bg-white/[0.02] border border-white/[0.08] overflow-hidden flex items-center justify-center shrink-0 relative group/avatar">
+                                {avatarUrl ? (
+                                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover transition-transform group-hover/avatar:scale-110 duration-700" />
+                                ) : (
+                                    <span className="text-xl font-black text-white/10 italic">IMG</span>
+                                )}
                             </div>
                         </div>
-                        <div className="w-full">
-                            <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2 block">Visual Identity (URL)</label>
-                            <input
-                                type="url"
-                                value={avatarUrl}
-                                onChange={(e) => setAvatarUrl(e.target.value)}
-                                placeholder="https://host.com/image.jpg"
-                                className="w-full bg-white/[0.02] border border-white/[0.06] rounded-none px-4 py-3 text-[13px] outline-none focus:border-[#e63030]/40 transition-all text-white placeholder:text-white/10"
-                            />
+                        <div className="flex-1 flex flex-col justify-center gap-4">
+                            <div>
+                                <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2 block">Avatar URL</label>
+                                <input
+                                    type="url"
+                                    value={avatarUrl}
+                                    onChange={(e) => setAvatarUrl(e.target.value)}
+                                    placeholder="https://host.com/avatar.jpg"
+                                    className="w-full bg-white/[0.02] border border-white/[0.06] rounded-none px-4 py-3 text-[13px] outline-none focus:border-[#e63030]/40 transition-all text-white placeholder:text-white/10"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] mb-2 block">Banner URL</label>
+                                <input
+                                    type="url"
+                                    value={bannerUrl}
+                                    onChange={(e) => setBannerUrl(e.target.value)}
+                                    placeholder="https://host.com/banner.jpg"
+                                    className="w-full bg-white/[0.02] border border-white/[0.06] rounded-none px-4 py-3 text-[13px] outline-none focus:border-[#e63030]/40 transition-all text-white placeholder:text-white/10"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -165,8 +180,8 @@ export default function EditProfileModal({ isOpen, onClose, onSaved }: EditProfi
                                     key={genre}
                                     onClick={() => toggleGenre(genre)}
                                     className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-widest transition-all border ${genres.includes(genre)
-                                            ? "bg-[#e63030]/20 border-[#e63030] text-white"
-                                            : "bg-white/[0.02] border-white/[0.06] text-white/30 hover:border-white/20"
+                                        ? "bg-[#e63030]/20 border-[#e63030] text-white"
+                                        : "bg-white/[0.02] border-white/[0.06] text-white/30 hover:border-white/20"
                                         }`}
                                 >
                                     {genre}
