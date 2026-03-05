@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/context/AuthContext";
 import { api } from "@/src/lib/api";
 
 function OAuthCallbackInner() {
     const router = useRouter();
-    const searchParams = useSearchParams();
     const { setTokenAndUser } = useAuth();
     const [status, setStatus] = useState<"loading" | "error">("loading");
     const [errorMsg, setErrorMsg] = useState("");
@@ -15,21 +14,38 @@ function OAuthCallbackInner() {
     useEffect(() => {
         const handleCallback = async () => {
             try {
-                const code = searchParams?.get("code");
+                // Supabase implicit flow puts tokens in the URL hash: #access_token=...&...
+                const hash = typeof window !== "undefined" ? window.location.hash : "";
+                const params = new URLSearchParams(hash.replace(/^#/, ""));
 
-                if (!code) {
-                    throw new Error("No authorization code found in the URL.");
+                const accessToken = params.get("access_token");
+                const tokenType = params.get("type"); // "recovery" | "signup" | null for OAuth
+
+                if (!accessToken) {
+                    // Fallback: check query string (PKCE flow sends ?code=)
+                    const query = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+                    const code = query.get("code");
+                    const errorDesc = query.get("error_description");
+
+                    if (errorDesc) throw new Error(decodeURIComponent(errorDesc));
+                    if (code) {
+                        // PKCE code exchange via backend
+                        const res = await api.auth.oauthCallback(code);
+                        const { user, session } = res.data || res;
+                        if (!session?.access_token) throw new Error("No session returned from server.");
+                        setTokenAndUser(session.access_token, user);
+                        router.replace("/discover");
+                        return;
+                    }
+                    throw new Error("No token found. Please try signing in again.");
                 }
 
-                // Send code to backend — it does the Supabase exchange server-side
-                const res = await api.auth.oauthCallback(code);
-                const { user, session } = res.data || res;
+                // Implicit flow — access_token is already a valid JWT
+                // Fetch user profile from backend exactly like email/password login
+                const userData = await api.auth.me(accessToken);
+                const user = userData.data || userData;
 
-                if (!session?.access_token) {
-                    throw new Error("No session returned from server.");
-                }
-
-                setTokenAndUser(session.access_token, user);
+                setTokenAndUser(accessToken, user);
                 router.replace("/discover");
             } catch (err: any) {
                 console.error("OAuth callback error:", err);
