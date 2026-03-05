@@ -38,6 +38,31 @@ const nextConfig: NextConfig = {
         hostname: "images.alphacoders.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh1.googleusercontent.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "lh2.googleusercontent.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "pub-b2620e54712941dbbdba57bdbcde64f7.r2.dev",
+        pathname: "/**",
+      },
     ],
   },
 };
