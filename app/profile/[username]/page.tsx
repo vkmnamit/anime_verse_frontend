@@ -92,19 +92,22 @@ export default function ProfilePage() {
     );
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            {/* Left Column (Col 4) */}
-            <div className="lg:col-span-4 flex flex-col gap-10 order-2 lg:order-1">
-                <IdentityHub bio={userAboutMe} genres={formattedGenres} />
-                <ScheduleWidget releases={schedule} />
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Main Content (Col 8) */}
+            <div className="xl:col-span-8 flex flex-col gap-24">
+                <TopAnimeSection anime={watchlist} />
+
+                {/* Bottom Stats Row (Like Discover) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-white/5 pt-20">
+                    <ReactionsWidget reactions={formattedReactions} />
+                    <ScheduleWidget releases={schedule} />
+                </div>
             </div>
 
-            {/* Middle Column (Col 8) */}
-            <div className="lg:col-span-8 flex flex-col gap-16 order-1 lg:order-2">
-                <TopAnimeSection anime={watchlist} />
-                <div className="w-full">
-                    <ReactionsWidget reactions={formattedReactions} />
-                </div>
+            {/* Sidebar (Col 4) */}
+            <div className="xl:col-span-4 flex flex-col gap-10 lg:sticky lg:top-32 h-fit">
+                <IdentityHub bio={userAboutMe} genres={formattedGenres} />
+                <ProgressWidget percentage={Math.floor(Math.random() * 40) + 60} />
             </div>
         </div>
     );
