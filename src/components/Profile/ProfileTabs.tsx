@@ -24,22 +24,25 @@ export default function ProfileTabs({ username }: { username: string }) {
     const activeTab = getActiveTab();
 
     return (
-        <nav className="flex items-center justify-center py-6 px-4">
-            <div className="flex items-center gap-2 p-1.5 bg-white/[0.03] border border-white/5 rounded-full overflow-x-auto overflow-y-hidden scrollbar-hide max-w-full">
+        <nav className="flex items-center justify-center w-full py-4 px-4 overflow-hidden">
+            <div className="flex items-center gap-10 sm:gap-20 px-4 sm:px-12 overflow-x-auto scrollbar-hide max-w-full">
                 {tabs.map((tab) => {
                     const href = `/profile/${username}${tab.href}`;
-                    const isActive = activeTab === (tab.id === "profile" && pathname.endsWith(username) ? "profile" : tab.id);
+                    const isActive = activeTab === (tab.id === "profile" && (pathname.endsWith(username) || pathname.endsWith(username + "/")) ? "profile" : tab.id);
 
                     return (
                         <Link
                             key={tab.id}
                             href={href}
-                            className={`px-8 py-3 text-[14px] font-bold rounded-full transition-all shrink-0 tracking-tight ${isActive
-                                    ? "bg-white text-black shadow-xl"
-                                    : "text-white/40 hover:text-white/80 hover:bg-white/5"
+                            className={`relative py-4 text-[13px] font-black uppercase tracking-[0.22em] transition-all shrink-0 ${isActive
+                                    ? "text-white scale-110"
+                                    : "text-white/20 hover:text-white/50"
                                 }`}
                         >
                             {tab.label}
+                            {isActive && (
+                                <div className="absolute -bottom-[1px] left-0 right-0 h-[2.5px] bg-[#e63030] shadow-[0_0_15px_rgba(230,48,48,0.8)] rounded-full" />
+                            )}
                         </Link>
                     );
                 })}

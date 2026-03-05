@@ -83,18 +83,22 @@ export default function ProfileLayout({ children }: { children: React.ReactNode 
                         <div className="w-12 h-12 border-2 border-white/5 border-t-[#e63030] animate-spin rounded-full shadow-[0_0_20px_rgba(230,48,48,0.2)]" />
                     </div>
                 ) : (
-                    <div className="max-w-5xl mx-auto w-full flex flex-col gap-24">
-                        <ProfileHero
-                            user={user}
-                            stats={stats}
-                            isOwnProfile={isOwnProfile}
-                            onProfileUpdated={handleProfileUpdated}
-                        />
-                        <div className="flex flex-col gap-12">
+                    <div className="w-full flex flex-col gap-12 sm:gap-24">
+                        <div className="max-w-5xl mx-auto w-full">
+                            <ProfileHero
+                                user={user}
+                                stats={stats}
+                                isOwnProfile={isOwnProfile}
+                                onProfileUpdated={handleProfileUpdated}
+                            />
+                        </div>
+
+                        <div className="w-full border-y border-white/5 bg-white/[0.01]">
                             <ProfileTabs username={profileUsername} />
-                            <div className="px-4">
-                                {children}
-                            </div>
+                        </div>
+
+                        <div className="max-w-[1520px] mx-auto w-full px-4 lg:px-8">
+                            {children}
                         </div>
                     </div>
                 )}
