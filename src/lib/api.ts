@@ -270,6 +270,10 @@ export const api = {
         me: (token: string) => fetcher("/auth/me", {
             headers: { Authorization: `Bearer ${token}` }
         }),
+        oauthCallback: (code: string) => fetcher("/auth/oauth/callback", {
+            method: "POST",
+            body: JSON.stringify({ code })
+        }),
     },
     upload: {
         /**
