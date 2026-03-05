@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useAnimeModal } from "@/src/context/AnimeModalContext";
@@ -23,6 +23,11 @@ export default function AnimeDetailModal() {
     const [isInWatchlist, setIsInWatchlist] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [replyingTo, setReplyingTo] = useState<{ id: string; username: string } | null>(null);
+    const [replyText, setReplyText] = useState("");
+    const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
+    const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
+    const commentsEndRef = useRef<HTMLDivElement>(null);
 
     // Dynamic Truncation for Synopsis
     const SYNOPSIS_THRESHOLD = 450;
@@ -75,6 +80,10 @@ export default function AnimeDetailModal() {
             setIsInWatchlist(false);
             setIsLiked(false);
             setIsExpanded(false);
+            setReplyingTo(null);
+            setReplyText("");
+            setLikedComments(new Set());
+            setExpandedReplies(new Set());
         }
         return () => {
             document.body.style.overflow = 'unset';
@@ -281,75 +290,236 @@ export default function AnimeDetailModal() {
 
                     {/* RIGHT COLUMN: Community Sidebar */}
                     <div className="xl:col-span-4 self-start sticky top-10">
-                        <div className="bg-[#0b0b0f]/60 backdrop-blur-2xl border border-white/10 rounded-[12px] shadow-2xl overflow-hidden shadow-black/50">
-                            {/* Header */}
-                            <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between">
-                                <h3 className="text-[17px] font-bold text-white">Hot Takes & Reactions</h3>
-                                <button className="text-white/40 hover:text-white transition-colors">
-                                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                        <circle cx="5" cy="12" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="19" cy="12" r="1.5" />
-                                    </svg>
-                                </button>
+                        <div className="bg-[#0b0b0f]/60 backdrop-blur-2xl border border-white/10 rounded-[12px] shadow-2xl overflow-hidden shadow-black/50 flex flex-col" style={{ maxHeight: "70vh" }}>
+
+                            {/* Header — centered title */}
+                            <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between shrink-0">
+                                <div className="flex-1" />
+                                <h3 className="text-[15px] font-bold text-white tracking-tight">Hot Takes &amp; Reactions</h3>
+                                <div className="flex-1 flex justify-end">
+                                    <button className="text-white/30 hover:text-white transition-colors">
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <circle cx="5" cy="12" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="19" cy="12" r="1.5" />
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
 
-                            {/* Comments List */}
-                            <div className="p-0">
-                                {comments.length > 0 ? (
-                                    <div className="divide-y divide-white/10">
-                                        {comments.slice(0, 3).map((comment: any) => (
-                                            <div key={comment.id} className="px-6 py-6 flex gap-4 hover:bg-white/[0.02] transition-colors group">
-                                                <div className="w-12 h-12 rounded-full overflow-hidden border border-white/10 shrink-0 shadow-lg">
-                                                    <img
-                                                        src={comment.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${comment.profiles?.username || 'U'}&background=random`}
-                                                        alt=""
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                </div>
-                                                <div className="min-w-0 flex flex-col justify-center">
-                                                    <p className="text-[14.5px] text-white/90 leading-relaxed font-normal">
-                                                        {comment.content}
-                                                    </p>
-                                                    <p className="text-[13px] text-white/40 mt-1 font-medium italic">
-                                                        — {comment.profiles?.username || 'anon'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        ))}
+                            {/* Comments scroll area */}
+                            <div className="overflow-y-auto flex-1 divide-y divide-white/[0.06]" style={{ scrollbarWidth: "none" }}>
+                                {comments.length === 0 ? (
+                                    <div className="py-16 text-center">
+                                        <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-white/20">No reactions yet.</p>
+                                        <p className="text-[10px] text-white/10 mt-1">Be the first to drop a hot take!</p>
                                     </div>
                                 ) : (
-                                    <div className="py-16 text-center">
-                                        <p className="text-[12px] font-bold uppercase tracking-[0.3em] text-white/20">NO REACTIONS YET.</p>
-                                    </div>
+                                    comments.map((comment: any) => {
+                                        const username = comment.profiles?.username || "anon";
+                                        const avatar = comment.profiles?.avatar_url;
+                                        const avatarSrc = avatar && avatar.startsWith("http")
+                                            ? avatar
+                                            : `https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=e63030&color=fff&bold=true`;
+                                        const isLikedC = likedComments.has(comment.id);
+                                        const replies: any[] = comment.replies || [];
+                                        const showReplies = expandedReplies.has(comment.id);
+
+                                        return (
+                                            <div key={comment.id} className="px-4 py-4 hover:bg-white/[0.02] transition-colors group">
+                                                {/* Main comment row */}
+                                                <div className="flex gap-3">
+                                                    {/* Avatar — click to visit profile */}
+                                                    <Link
+                                                        href={`/profile/${username}`}
+                                                        onClick={closeModal}
+                                                        className="shrink-0"
+                                                    >
+                                                        <img
+                                                            src={avatarSrc}
+                                                            alt={username}
+                                                            className="w-9 h-9 rounded-full object-cover border border-white/10 hover:border-[#e63030]/60 transition-colors shadow-md"
+                                                        />
+                                                    </Link>
+
+                                                    {/* Content */}
+                                                    <div className="flex-1 min-w-0">
+                                                        {/* Username + timestamp */}
+                                                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                            <Link
+                                                                href={`/profile/${username}`}
+                                                                onClick={closeModal}
+                                                                className="text-[12px] font-bold text-white/80 hover:text-[#e63030] transition-colors"
+                                                            >
+                                                                {username}
+                                                            </Link>
+                                                            <span className="text-[10px] text-white/20">
+                                                                {comment.created_at
+                                                                    ? new Date(comment.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+                                                                    : ""}
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Comment text */}
+                                                        <p className="text-[13.5px] text-white/80 leading-relaxed">
+                                                            {comment.content}
+                                                        </p>
+
+                                                        {/* Action row */}
+                                                        <div className="flex items-center gap-4 mt-2">
+                                                            {/* Like */}
+                                                            <button
+                                                                onClick={() => setLikedComments(prev => {
+                                                                    const next = new Set(prev);
+                                                                    if (next.has(comment.id)) next.delete(comment.id);
+                                                                    else next.add(comment.id);
+                                                                    return next;
+                                                                })}
+                                                                className={`flex items-center gap-1 text-[11px] font-semibold transition-colors ${isLikedC ? "text-[#e63030]" : "text-white/30 hover:text-white/70"}`}
+                                                            >
+                                                                <svg className="w-3.5 h-3.5" fill={isLikedC ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                                </svg>
+                                                                {isLikedC ? "Liked" : "Like"}
+                                                            </button>
+
+                                                            {/* Reply */}
+                                                            <button
+                                                                onClick={() => {
+                                                                    if (replyingTo?.id === comment.id) {
+                                                                        setReplyingTo(null);
+                                                                        setReplyText("");
+                                                                    } else {
+                                                                        setReplyingTo({ id: comment.id, username });
+                                                                        setReplyText("");
+                                                                    }
+                                                                }}
+                                                                className="flex items-center gap-1 text-[11px] font-semibold text-white/30 hover:text-white/70 transition-colors"
+                                                            >
+                                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                                                </svg>
+                                                                Reply
+                                                            </button>
+
+                                                            {/* Show replies toggle */}
+                                                            {replies.length > 0 && (
+                                                                <button
+                                                                    onClick={() => setExpandedReplies(prev => {
+                                                                        const next = new Set(prev);
+                                                                        if (next.has(comment.id)) next.delete(comment.id);
+                                                                        else next.add(comment.id);
+                                                                        return next;
+                                                                    })}
+                                                                    className="flex items-center gap-1 text-[11px] font-semibold text-[#e63030]/70 hover:text-[#e63030] transition-colors ml-auto"
+                                                                >
+                                                                    {showReplies ? "▲" : "▼"} {replies.length} {replies.length === 1 ? "reply" : "replies"}
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Inline reply input */}
+                                                        {replyingTo?.id === comment.id && (
+                                                            <div className="mt-3 flex gap-2 items-start">
+                                                                <div className="flex-1 bg-white/[0.04] border border-white/10 rounded-lg overflow-hidden focus-within:border-[#e63030]/50 transition-all">
+                                                                    <input
+                                                                        autoFocus
+                                                                        type="text"
+                                                                        placeholder={`Reply to ${username}…`}
+                                                                        value={replyText}
+                                                                        onChange={e => setReplyText(e.target.value)}
+                                                                        onKeyDown={async e => {
+                                                                            if (e.key === "Enter" && replyText.trim()) {
+                                                                                if (!user || !token) { closeModal(); router.push("/auth"); return; }
+                                                                                try {
+                                                                                    await api.comments.create(selectedAnime!.id, replyText.trim(), token, comment.id, selectedAnime);
+                                                                                    const comRes = await api.anime.comments(selectedAnime!.id).catch(() => ({ data: [] }));
+                                                                                    if (comRes?.data) setComments(comRes.data);
+                                                                                    setReplyText("");
+                                                                                    setReplyingTo(null);
+                                                                                    setExpandedReplies(prev => new Set([...prev, comment.id]));
+                                                                                } catch { alert("Failed to post reply."); }
+                                                                            }
+                                                                            if (e.key === "Escape") { setReplyingTo(null); setReplyText(""); }
+                                                                        }}
+                                                                        className="w-full bg-transparent outline-none text-[12px] text-white/80 placeholder:text-white/20 px-3 py-2"
+                                                                    />
+                                                                </div>
+                                                                <button
+                                                                    disabled={!replyText.trim()}
+                                                                    onClick={async () => {
+                                                                        if (!replyText.trim()) return;
+                                                                        if (!user || !token) { closeModal(); router.push("/auth"); return; }
+                                                                        try {
+                                                                            await api.comments.create(selectedAnime!.id, replyText.trim(), token, comment.id, selectedAnime);
+                                                                            const comRes = await api.anime.comments(selectedAnime!.id).catch(() => ({ data: [] }));
+                                                                            if (comRes?.data) setComments(comRes.data);
+                                                                            setReplyText("");
+                                                                            setReplyingTo(null);
+                                                                            setExpandedReplies(prev => new Set([...prev, comment.id]));
+                                                                        } catch { alert("Failed to post reply."); }
+                                                                    }}
+                                                                    className={`shrink-0 px-3 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wide transition-all ${replyText.trim() ? "bg-[#e63030] text-white" : "bg-white/5 text-white/20"}`}
+                                                                >
+                                                                    Send
+                                                                </button>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Replies thread */}
+                                                        {showReplies && replies.length > 0 && (
+                                                            <div className="mt-3 pl-3 border-l border-white/[0.08] flex flex-col gap-3">
+                                                                {replies.map((reply: any) => {
+                                                                    const rUsername = reply.profiles?.username || "anon";
+                                                                    const rAvatar = reply.profiles?.avatar_url;
+                                                                    const rAvatarSrc = rAvatar && rAvatar.startsWith("http")
+                                                                        ? rAvatar
+                                                                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(rUsername)}&background=3b82f6&color=fff&bold=true`;
+                                                                    return (
+                                                                        <div key={reply.id} className="flex gap-2">
+                                                                            <Link href={`/profile/${rUsername}`} onClick={closeModal} className="shrink-0">
+                                                                                <img src={rAvatarSrc} alt={rUsername} className="w-7 h-7 rounded-full object-cover border border-white/10 hover:border-[#e63030]/60 transition-colors" />
+                                                                            </Link>
+                                                                            <div className="flex-1 min-w-0">
+                                                                                <div className="flex items-center gap-2 mb-0.5">
+                                                                                    <Link href={`/profile/${rUsername}`} onClick={closeModal} className="text-[11px] font-bold text-white/70 hover:text-[#e63030] transition-colors">{rUsername}</Link>
+                                                                                    <span className="text-[9px] text-white/20">{reply.created_at ? new Date(reply.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : ""}</span>
+                                                                                </div>
+                                                                                <p className="text-[12.5px] text-white/70 leading-relaxed">{reply.content}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
                                 )}
+                                <div ref={commentsEndRef} />
                             </div>
 
-                            {/* Interactive Input (Slack/Discord Redesign) */}
-                            <div className="p-6 pt-2">
-                                <div className="bg-white/[0.03] border border-white/10 rounded-sm overflow-hidden focus-within:border-[#e63030]/50 transition-all">
+                            {/* Compose input — always at bottom */}
+                            <div className="p-4 pt-2 border-t border-white/[0.06] shrink-0">
+                                <div className="bg-white/[0.03] border border-white/10 rounded-xl overflow-hidden focus-within:border-[#e63030]/50 transition-all">
                                     <textarea
-                                        placeholder="Add a hot take..."
-                                        className="w-full bg-transparent border-none outline-none text-[15px] text-white/90 placeholder:text-white/20 px-4 py-4 min-h-[80px] resize-none font-medium no-scrollbar"
+                                        placeholder="Add a hot take…"
+                                        className="w-full bg-transparent border-none outline-none text-[13px] text-white/90 placeholder:text-white/20 px-4 py-3 min-h-[68px] max-h-[120px] resize-none font-medium"
+                                        style={{ scrollbarWidth: "none" }}
                                         value={commentText}
                                         onChange={(e) => setCommentText(e.target.value)}
                                         onKeyDown={(e) => {
-                                            if (e.key === 'Enter' && !e.shiftKey) {
+                                            if (e.key === "Enter" && !e.shiftKey) {
                                                 e.preventDefault();
                                                 handleCommentSubmit();
                                             }
                                         }}
                                     />
-
-                                    {/* Action Bar — Simplified Rectangle */}
                                     <div className="px-3 py-2 bg-white/[0.02] border-t border-white/5 flex items-center justify-end">
-
-
                                         <button
                                             onClick={handleCommentSubmit}
                                             disabled={!commentText.trim()}
-                                            className={`px-6 py-2 flex items-center justify-center rounded-sm transition-all active:scale-95 group/send text-[12px] font-bold uppercase tracking-widest ${commentText.trim()
-                                                ? "bg-[#e63030] text-white"
-                                                : "bg-white/5 text-white/20"
-                                                }`}
+                                            className={`px-5 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95 ${commentText.trim() ? "bg-[#e63030] text-white hover:bg-[#ff4545]" : "bg-white/5 text-white/20"}`}
                                         >
                                             Post Reaction
                                         </button>
