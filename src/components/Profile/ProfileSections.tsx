@@ -5,13 +5,10 @@ import Image from "next/image";
 // ─── Stats Bar (Removed Zap Points) ──────────────────────────────────────────
 export function StatsBar({ debates }: { debates: number }) {
     return (
-        <div className="bg-white/[0.03] border border-white/[0.08] p-5 rounded-none mb-14 group hover:bg-white/[0.05] transition-all backdrop-blur-md">
-            <div className="flex items-center justify-center p-8 bg-black/40 border border-white/[0.05] rounded-none group/item cursor-pointer hover:bg-white/[0.02] transition-all relative overflow-hidden">
-                {/* Visual accent */}
-                <div className="absolute inset-y-0 left-0 w-[4px] bg-[#e63030] scale-y-0 group-hover:scale-y-100 transition-transform duration-500" />
-
+        <div className="bg-[#000000] border border-white/5 p-6 rounded-[32px] mb-14 group hover:bg-white/[0.01] transition-all shadow-2xl">
+            <div className="flex items-center justify-center p-8 bg-white/[0.02] border border-white/5 rounded-[24px] group/item cursor-pointer hover:bg-white/[0.04] transition-all relative overflow-hidden">
                 <div className="flex flex-col items-center gap-6">
-                    <div className="w-16 h-16 rounded-none bg-white/[0.05] flex items-center justify-center border border-white/10 shadow-2xl group-hover:border-[#e63030]/40 transition-all">
+                    <div className="w-16 h-16 rounded-full bg-white/[0.05] flex items-center justify-center border border-white/10 shadow-2xl group-hover:border-[#e63030]/40 transition-all">
                         <span className="text-3xl group-hover:scale-110 transition-transform duration-500">⚔️</span>
                     </div>
                     <div className="flex flex-col items-center gap-2">
@@ -20,7 +17,7 @@ export function StatsBar({ debates }: { debates: number }) {
                             <span className="text-5xl font-black italic text-white tracking-tighter opacity-90 group-hover:text-[#e63030] transition-colors">
                                 {debates.toLocaleString()}
                             </span>
-                            <div className="px-4 py-1.5 bg-[#e63030]/10 border border-[#e63030]/30 rounded-none">
+                            <div className="px-4 py-1.5 bg-[#e63030]/10 border border-[#e63030]/20 rounded-full">
                                 <span className="text-[11px] font-bold text-[#e63030] tracking-widest uppercase">Rank #12</span>
                             </div>
                         </div>
@@ -54,29 +51,27 @@ export function TopAnimeSection({ anime }: { anime: any[] }) {
                     <p className="text-[13px] font-bold text-white/20 tracking-wider">Empty Watchlist Collection</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
                     {displayList.map((item) => (
-                        <div key={item.id} className="relative aspect-[2/3] rounded-none overflow-hidden group/card cursor-pointer border border-white/[0.06] hover:border-[#e63030]/50 transition-all duration-700 shadow-2xl bg-[#000000]">
+                        <div key={item.id} className="relative aspect-[2/3] rounded-[32px] overflow-hidden group/card cursor-pointer border border-white/5 hover:border-[#e63030]/40 transition-all duration-700 shadow-[0_20px_50px_rgba(0,0,0,0.5)] bg-[#000000]">
                             <Image
                                 src={item.posterImage}
                                 alt={item.title}
                                 fill
-                                className="object-cover grayscale-[20%] group-hover/card:grayscale-0 group-hover/card:scale-110 transition-all duration-1000"
+                                className="object-cover transition-all duration-1000 group-hover/card:scale-110"
                             />
                             {/* Overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent opacity-80 group-hover/card:opacity-95 transition-opacity" />
-
-                            <div className="absolute inset-5 border border-white/0 group-hover/card:border-white/10 transition-all duration-700 pointer-events-none" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#000000] via-[#000000]/20 to-transparent opacity-80 group-hover/card:opacity-95 transition-opacity" />
 
                             <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-center text-center">
-                                <h3 className="text-[16px] font-black italic uppercase tracking-tight text-white mb-2 group-hover/card:text-[#e63030] transition-colors drop-shadow-2xl line-clamp-2">{item.title}</h3>
-                                <div className="flex flex-col items-center gap-2">
-                                    {item.rating > 0 && (
-                                        <span className="text-[12px] font-bold text-[#e63030] group-hover:text-white transition-colors">
-                                            Score: {(item.rating / 10).toFixed(1)} ⭐
+                                <h3 className="text-[15px] font-black italic uppercase tracking-tight text-white mb-2 group-hover/card:text-[#e63030] transition-colors drop-shadow-2xl line-clamp-2">{item.title}</h3>
+                                {item.rating > 0 && (
+                                    <div className="px-4 py-1 bg-white/5 backdrop-blur-md rounded-full border border-white/10">
+                                        <span className="text-[11px] font-bold text-white/60">
+                                            Score: {(item.rating / 10).toFixed(1)}
                                         </span>
-                                    )}
-                                </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}

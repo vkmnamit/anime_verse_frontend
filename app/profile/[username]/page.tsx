@@ -87,20 +87,20 @@ export default function ProfilePage() {
 
     if (loading) return (
         <div className="flex items-center justify-center py-40">
-            <div className="w-10 h-10 border-2 border-white/5 border-t-[#e63030] animate-spin rounded-none" />
+            <div className="w-12 h-12 border-2 border-white/5 border-t-[#e63030] animate-spin rounded-full" />
         </div>
     );
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 animate-in fade-in duration-700">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
             {/* Left Column (Col 4) */}
-            <div className="lg:col-span-4 flex flex-col gap-12 order-2 lg:order-1">
+            <div className="lg:col-span-4 flex flex-col gap-10 order-2 lg:order-1">
                 <IdentityHub bio={userAboutMe} genres={formattedGenres} />
                 <ScheduleWidget releases={schedule} />
             </div>
 
             {/* Middle Column (Col 8) */}
-            <div className="lg:col-span-8 flex flex-col gap-24 order-1 lg:order-2">
+            <div className="lg:col-span-8 flex flex-col gap-16 order-1 lg:order-2">
                 <TopAnimeSection anime={watchlist} />
                 <div className="w-full">
                     <ReactionsWidget reactions={formattedReactions} />

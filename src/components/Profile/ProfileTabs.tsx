@@ -24,28 +24,26 @@ export default function ProfileTabs({ username }: { username: string }) {
     const activeTab = getActiveTab();
 
     return (
-        <div className="flex flex-col items-center gap-6 pt-12 pb-12 transition-all">
-            <div className="flex items-center justify-center gap-10 overflow-x-auto scrollbar-hide w-full">
+        <nav className="flex items-center justify-center py-6 px-4">
+            <div className="flex items-center gap-2 p-1.5 bg-white/[0.03] border border-white/5 rounded-full overflow-x-auto overflow-y-hidden scrollbar-hide max-w-full">
                 {tabs.map((tab) => {
                     const href = `/profile/${username}${tab.href}`;
-                    const isActive = activeTab === tab.id;
+                    const isActive = activeTab === (tab.id === "profile" && pathname.endsWith(username) ? "profile" : tab.id);
 
                     return (
                         <Link
                             key={tab.id}
                             href={href}
-                            className={`relative py-2 text-[15px] font-bold transition-all shrink-0 tracking-tight ${isActive ? "text-[#e63030]" : "text-white/40 hover:text-white/80"
+                            className={`px-8 py-3 text-[14px] font-bold rounded-full transition-all shrink-0 tracking-tight ${isActive
+                                    ? "bg-white text-black shadow-xl"
+                                    : "text-white/40 hover:text-white/80 hover:bg-white/5"
                                 }`}
                         >
                             {tab.label}
-
-                            {isActive && (
-                                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-[#e63030] shadow-[0_0_15px_rgba(230,48,48,0.5)]" />
-                            )}
                         </Link>
                     );
                 })}
             </div>
-        </div>
+        </nav>
     );
 }

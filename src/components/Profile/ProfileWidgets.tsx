@@ -6,12 +6,9 @@ import Image from "next/image";
 export function AboutWidget({ text }: { text: string }) {
     return (
         <div className="flex flex-col gap-6 mt-4 group">
-            <h3 className="text-[14px] font-bold text-white/40 text-center group-hover:text-white/60 transition-colors">About Me</h3>
-            <div className="bg-[#000000] border border-white/[0.08] p-10 rounded-none relative overflow-hidden group-hover:bg-white/[0.02] transition-all duration-500 min-h-[160px] flex items-center justify-center shadow-2xl">
-                {/* Accent line */}
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#e63030]/20 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-700" />
-
-                <p className="text-[16px] leading-[1.8] text-white/60 font-medium text-center selection:bg-[#e63030]/30 selection:text-white">
+            <h3 className="text-[14px] font-bold text-white/20 px-8">About Me</h3>
+            <div className="bg-[#000000] border border-white/5 p-10 rounded-[32px] relative overflow-hidden group-hover:bg-white/[0.02] transition-all duration-700 shadow-2xl">
+                <p className="text-[16px] leading-[1.8] text-white/50 font-medium selection:bg-[#e63030]/30 selection:text-white">
                     {text}
                 </p>
             </div>
@@ -23,15 +20,15 @@ export function AboutWidget({ text }: { text: string }) {
 export function BadgesWidget({ badges }: { badges: any[] }) {
     return (
         <div className="flex flex-col gap-6 mt-6 group">
-            <h3 className="text-[14px] font-bold text-white/40 text-center group-hover:text-white/60 transition-colors">Badges</h3>
-            <div className="bg-[#000000] border border-white/[0.08] p-10 rounded-none group-hover:bg-white/[0.02] transition-all duration-500 min-h-[140px] shadow-2xl">
+            <h3 className="text-[14px] font-bold text-white/20 px-8">Badges</h3>
+            <div className="bg-[#000000] border border-white/5 p-10 rounded-[32px] group-hover:bg-white/[0.02] transition-all duration-700 shadow-2xl">
                 <div className="grid grid-cols-3 gap-8">
                     {badges.map((badge, i) => (
                         <div key={i} className="flex flex-col items-center gap-4 group/item">
-                            <div className="w-16 h-16 bg-white/[0.05] border border-white/[0.1] flex items-center justify-center text-3xl rounded-none shadow-2xl group-hover/item:border-[#e63030]/30 group-hover/item:bg-white/[0.08] transition-all duration-500">
+                            <div className="w-16 h-16 bg-white/[0.03] border border-white/[0.08] flex items-center justify-center text-3xl rounded-none shadow-2xl group-hover/item:border-[#e63030]/30 group-hover/item:bg-white/[0.05] transition-all duration-500">
                                 {badge.icon}
                             </div>
-                            <span className="text-[11px] font-bold text-white/30 text-center leading-tight group-hover/item:text-white/50 transition-colors">
+                            <span className="text-[12px] font-bold text-white/30 text-center leading-tight">
                                 {badge.name}
                             </span>
                         </div>
@@ -58,11 +55,11 @@ export function IdentityHub({ bio, genres }: { bio: string, genres: any[] }) {
 export function GenresWidget({ genres }: { genres: any[] }) {
     return (
         <div className="flex flex-col gap-6 mt-6 group">
-            <h3 className="text-[14px] font-bold text-white/40 text-center group-hover:text-white/60 transition-colors">Favorite Genres</h3>
-            <div className="bg-[#000000] border border-white/[0.08] p-10 rounded-none group-hover:bg-white/[0.02] transition-all duration-500 min-h-[140px] shadow-2xl">
-                <div className="flex flex-wrap justify-center gap-4">
+            <h3 className="text-[14px] font-bold text-white/20 px-8">Favorite Genres</h3>
+            <div className="bg-[#000000] border border-white/5 p-10 rounded-[32px] group-hover:bg-white/[0.02] transition-all duration-700 shadow-2xl">
+                <div className="flex flex-wrap gap-4">
                     {genres.map((genre, i) => (
-                        <div key={i} className="px-6 py-3 bg-white/[0.05] border border-white/[0.1] rounded-none flex items-center gap-3 hover:bg-[#e63030]/10 hover:border-[#e63030]/30 transition-all cursor-default">
+                        <div key={i} className="px-6 py-3 bg-white/[0.03] border border-white/[0.08] rounded-full flex items-center gap-3 hover:bg-[#e63030]/10 hover:hover:border-[#e63030]/20 transition-all cursor-default">
                             <span className="text-sm">{genre.icon}</span>
                             <span className="text-[12px] font-bold text-white/50">{genre.name}</span>
                         </div>
@@ -77,17 +74,17 @@ export function GenresWidget({ genres }: { genres: any[] }) {
 export function ReactionsWidget({ reactions }: { reactions: any[] }) {
     return (
         <div className="flex flex-col gap-6 mt-4 group">
-            <h3 className="text-[14px] font-bold text-white/40 text-center group-hover:text-white/60 transition-colors">Recent Reactions</h3>
-            <div className="bg-[#000000] border border-white/[0.08] p-6 rounded-none group-hover:bg-white/[0.01] transition-all duration-500 shadow-2xl">
-                <div className="flex flex-col gap-3">
+            <h3 className="text-[14px] font-bold text-white/20 px-8">Recent Reactions</h3>
+            <div className="bg-[#000000] border border-white/5 p-6 rounded-[32px] group-hover:bg-white/[0.01] transition-all duration-700 shadow-2xl">
+                <div className="flex flex-col gap-4">
                     {reactions.map((r, i) => (
-                        <div key={i} className="flex items-center gap-6 p-5 border border-white/[0.05] hover:border-white/20 group/row hover:bg-white/[0.02] transition-all shadow-xl">
-                            <div className="w-14 h-20 bg-white/[0.03] border border-white/[0.08] rounded-none shrink-0 overflow-hidden flex items-center justify-center text-2xl shadow-2xl group-hover/row:scale-105 transition-transform duration-500">
+                        <div key={i} className="flex items-center gap-6 p-4 rounded-[24px] border border-transparent hover:border-white/5 hover:bg-white/[0.02] transition-all group/row">
+                            <div className="w-14 h-20 bg-white/[0.03] border border-white/[0.08] rounded-[16px] shrink-0 overflow-hidden flex items-center justify-center text-2xl shadow-2xl group-hover/row:scale-105 transition-all">
                                 {r.icon || "🔥"}
                             </div>
-                            <div className="flex-1 flex flex-col justify-center gap-1 min-w-0">
-                                <h4 className="text-[15px] font-bold text-white/90 truncate group-hover/row:text-[#e63030] transition-colors italic uppercase">{r.anime}</h4>
-                                <p className="text-[11px] font-medium text-white/30">{r.time}</p>
+                            <div className="flex-1 min-w-0">
+                                <h4 className="text-[15px] font-bold text-white/90 truncate group-hover/row:text-[#e63030] transition-colors">{r.anime}</h4>
+                                <p className="text-[12px] font-medium text-white/30">{r.time}</p>
                             </div>
                         </div>
                     ))}

@@ -106,7 +106,7 @@ function AnimeVsCard({
                                 <p className="text-[10px] font-black uppercase tracking-wider text-white leading-tight text-center line-clamp-2">{slot.title}</p>
                             </div>
                         </div>
-                        {(isLive || winner) && (
+                        {(true || winner) && (
                             <div className="flex flex-col gap-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-[10px] font-black text-white/50">{pct}%</span>
@@ -116,7 +116,7 @@ function AnimeVsCard({
                                     <div className="h-full rounded-none transition-all duration-700"
                                         style={{ width: `${pct}%`, background: isWinner ? "#e63030" : "rgba(255,255,255,0.15)" }} />
                                 </div>
-                                {isLive && !winner && (
+                                {!winner && (
                                     <button
                                         onClick={() => onVote(matchId, side)}
                                         disabled={!!votedMatch || !!isVoting}
@@ -144,12 +144,6 @@ function AnimeVsCard({
 
     return (
         <div className="w-full flex flex-col gap-4">
-            {isLive && (
-                <div className="flex items-center justify-center gap-2">
-                    <span className="w-1 h-1 rounded-none bg-[#e63030] animate-pulse" />
-                    <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.25em]">Live Match</span>
-                </div>
-            )}
             <div className="flex items-center gap-3">
                 {renderSlot(slotA, "A", pctA, votesA)}
                 <div className="flex flex-col items-center gap-1 shrink-0">
@@ -349,7 +343,7 @@ export default function BattlesPage() {
                             </span>
                             {selectedDay === currentTournamentDay && (
                                 <div className="mt-2 px-3 py-1 rounded-none bg-[#e63030]/10 border border-[#e63030]/40 text-[#e63030] text-[9px] font-black uppercase tracking-[0.25em]">
-                                    Live matches
+                                    Today
                                 </div>
                             )}
                         </div>
@@ -395,7 +389,7 @@ export default function BattlesPage() {
                                         votesA={match.votesA}
                                         votesB={match.votesB}
                                         winner={match.winner}
-                                        isLive={match.isLive && selectedDay === currentTournamentDay}
+                                        isLive={match.isLive}
                                         matchId={match.id}
                                         onVote={handleVote}
                                         votedMatch={votedMatches[match.id]}
