@@ -7,17 +7,23 @@ import { usePathname } from "next/navigation";
 
 import { useAuth } from "@/src/context/AuthContext";
 import { useSearch } from "@/src/context/SearchContext";
+import { api } from "@/src/lib/api";
 
 export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
     const pathname = usePathname();
-    const { user, logout } = useAuth();
+    const { user, logout, token } = useAuth();
     const { searchQuery, setSearchQuery } = useSearch();
     const isLoggedIn = !!user;
     const [searchOpen, setSearchOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
+    const [notificationsOpen, setNotificationsOpen] = useState(false);
+    const [notifications, setNotifications] = useState<any[]>([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [loadingNotifications, setLoadingNotifications] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const searchRef = useRef<HTMLDivElement>(null);
+    const notifRef = useRef<HTMLDivElement>(null);
     const searchInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -27,6 +33,9 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
             }
             if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
                 setSearchOpen(false);
+            }
+            if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+                setNotificationsOpen(false);
             }
         }
         document.addEventListener("mousedown", handleClick);
@@ -49,6 +58,46 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
             searchInputRef.current.focus();
         }
     }, [searchOpen]);
+
+    useEffect(() => {
+        if (user && token && notificationsOpen) {
+            fetchNotifications();
+        }
+    }, [notificationsOpen, user, token]);
+
+    useEffect(() => {
+        if (user && token) {
+            fetchNotifications();
+        }
+    }, [user, token]);
+
+    const fetchNotifications = async () => {
+        if (!token) return;
+        setLoadingNotifications(true);
+        try {
+            const res = await api.notifications.getAll(token, 1, 5);
+            if (res?.data) {
+                setNotifications(res.data);
+                const unread = res.data.filter((n: any) => !n.is_read).length;
+                setUnreadCount(unread);
+            }
+        } catch (err) {
+            console.error("Failed to fetch notifications", err);
+        } finally {
+            setLoadingNotifications(false);
+        }
+    };
+
+    const handleMarkAllRead = async () => {
+        if (!token) return;
+        try {
+            await api.notifications.markAllRead(token);
+            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+            setUnreadCount(0);
+        } catch (err) {
+            console.error("Failed to mark all read", err);
+        }
+    };
 
     const navLinks = [
         { href: "/", label: "Home", active: pathname === "/" },
@@ -110,11 +159,98 @@ export default function Navbar({ noSpacer = false }: { noSpacer?: boolean }) {
                     <div className="flex items-center gap-2 lg:gap-4 shrink-0">
 
                         {/* Notifications */}
-                        <button className="relative p-2 text-white/70 hover:text-white transition-colors">
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-                            </svg>
-                        </button>
+                        <div className="relative" ref={notifRef}>
+                            <button
+                                onClick={() => setNotificationsOpen(!notificationsOpen)}
+                                className={`relative p-2 transition-colors ${notificationsOpen ? "text-[#e63030]" : "text-white/70 hover:text-white"}`}
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                                </svg>
+                                {isLoggedIn && unreadCount > 0 && (
+                                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#e63030] rounded-full ring-2 ring-[#0b0b0f]" />
+                                )}
+                            </button>
+
+                            {/* Notifications Dropdown */}
+                            {notificationsOpen && (
+                                <div
+                                    className="absolute right-[-60px] md:right-0 mt-3 w-[320px] sm:w-[380px] rounded-2xl overflow-hidden z-[110] shadow-2xl shadow-black/60"
+                                    style={{
+                                        background: 'linear-gradient(180deg, rgba(30,28,35,0.97) 0%, rgba(18,16,22,0.98) 100%)',
+                                        border: '1px solid rgba(255,255,255,0.08)',
+                                        backdropFilter: 'blur(20px)',
+                                        animation: 'profileDropdownIn 0.25s ease-out'
+                                    }}
+                                >
+                                    <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+                                        <h3 className="text-[14px] font-bold text-white tracking-wide">Notifications</h3>
+                                        {unreadCount > 0 && (
+                                            <button
+                                                onClick={handleMarkAllRead}
+                                                className="text-[10px] font-bold uppercase tracking-widest text-[#e63030] hover:text-[#ff4545] transition-colors"
+                                            >
+                                                Mark all read
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+                                        {loadingNotifications && notifications.length === 0 ? (
+                                            <div className="py-10 text-center">
+                                                <div className="w-6 h-6 border-2 border-[#e63030] border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                                                <p className="text-[11px] text-white/30 font-bold uppercase tracking-widest">Searching the Verse...</p>
+                                            </div>
+                                        ) : notifications.length === 0 ? (
+                                            <div className="py-12 text-center">
+                                                <p className="text-[13px] text-white/40">No notifications yet</p>
+                                            </div>
+                                        ) : (
+                                            notifications.map((notif) => (
+                                                <div
+                                                    key={notif.id}
+                                                    className={`flex items-start gap-3.5 px-5 py-4 hover:bg-white/[0.04] transition-all cursor-pointer border-b border-white/[0.03] last:border-0 ${!notif.is_read ? "bg-white/[0.02]" : ""}`}
+                                                >
+                                                    <div className="relative shrink-0">
+                                                        <div className="w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center border border-white/10 overflow-hidden">
+                                                            <Image
+                                                                src={notif.actor_avatar || `https://avatar.iran.liara.run/public/boy?username=${notif.actor_username || 'user'}`}
+                                                                alt={notif.actor_username || 'User'}
+                                                                width={40}
+                                                                height={40}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                        {!notif.is_read && (
+                                                            <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#e63030] rounded-full border-2 border-[#1e1c23]" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-[13px] leading-snug">
+                                                            <span className="font-bold text-white">{notif.actor_username}</span>{" "}
+                                                            <span className="text-white/60">{notif.message || "sent you a notification"}</span>
+                                                        </p>
+                                                        <span className="text-[10px] text-white/30 font-semibold uppercase tracking-wider mt-1 block">
+                                                            {new Date(notif.created_at).toLocaleDateString() === new Date().toLocaleDateString()
+                                                                ? 'Today'
+                                                                : new Date(notif.created_at).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+
+                                    <Link
+                                        href="/notifications"
+                                        onClick={() => setNotificationsOpen(false)}
+                                        className="block py-3.5 text-center text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white bg-white/[0.02] hover:bg-white/[0.04] transition-all border-t border-white/[0.06]"
+                                    >
+                                        See All Activity
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Search — toggle style */}
                         <div ref={searchRef} className="relative flex items-center">
